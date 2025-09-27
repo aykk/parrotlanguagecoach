@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
+import { supabase } from "@/lib/supabase-client"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -26,10 +27,32 @@ export function PronunciationTrainer() {
   const [isAIGenerated, setIsAIGenerated] = useState(false)
   const [complexity, setComplexity] = useState<number>(5)
   const [isGenerating, setIsGenerating] = useState(false)
+  const [currentUser, setCurrentUser] = useState<any>(null)
   const speechAnalyzerRef = useRef<SpeechAnalyzer | null>(null)
 
   const languageConfig = getLanguageConfig(selectedLanguage)
   const isRTL = isRTLLanguage(selectedLanguage)
+
+  // Authentication effect
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        const { data } = await supabase.auth.getUser()
+        setCurrentUser(data.user)
+        progressTracker.setUserId(data.user?.id || null)
+        
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+          setCurrentUser(session?.user ?? null)
+          progressTracker.setUserId(session?.user?.id || null)
+        })
+        
+        return () => subscription.unsubscribe()
+      } catch (error) {
+        console.error('Auth init failed:', error)
+      }
+    }
+    initAuth()
+  }, [])
 
   useEffect(() => {
     speechAnalyzerRef.current = new SpeechAnalyzer(selectedLanguage)
@@ -114,7 +137,7 @@ export function PronunciationTrainer() {
 
           const practicedPhonemes = results.words.flatMap((word) => word.phonemes)
 
-          progressTracker.addSession({
+          await progressTracker.addSession({
             language: selectedLanguage,
             sentence: currentSentence,
             overallScore: results.overallScore,
@@ -159,7 +182,7 @@ export function PronunciationTrainer() {
 
         const practicedPhonemes = mockResults.words.flatMap((word) => word.phonemes)
 
-        progressTracker.addSession({
+        await progressTracker.addSession({
           language: selectedLanguage,
           sentence: currentSentence,
           overallScore: mockResults.overallScore,

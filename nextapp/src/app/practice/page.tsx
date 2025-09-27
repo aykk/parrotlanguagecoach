@@ -1,6 +1,7 @@
 "use client"
 
 import { PronunciationTrainer } from "@/components/pronunciation-trainer"
+import { AuthHeader } from "@/components/auth-header"
 import { Button } from "@/components/ui/button"
 import { ArrowLeftIcon } from "@radix-ui/react-icons"
 import { useRouter } from "next/navigation"
@@ -11,7 +12,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
+        <div className="mb-8 flex justify-between items-center">
           <Button 
             onClick={() => router.push("/")}
             variant="outline"
@@ -20,6 +21,7 @@ export default function Home() {
             <ArrowLeftIcon className="size-4" />
             Back to Home
           </Button>
+          <AuthHeader />
         </div>
         <PronunciationTrainer />
       </div>

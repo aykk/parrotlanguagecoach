@@ -80,7 +80,10 @@ export const LandingPage = () => {
             >
               Continue as guest
             </Button>
-            <Button className="px-10 py-3 bg-white/85 text-black hover:bg-white/80 border-white transition-all duration-300 font-medium text-base">
+            <Button 
+              onClick={() => router.push("/signin")}
+              className="px-10 py-3 bg-white/85 text-black hover:bg-white/80 border-white transition-all duration-300 font-medium text-base"
+            >
               Sign in
             </Button>
           </div>

@@ -10,6 +10,7 @@ export interface SessionData {
   weakPhonemes: string[]
   practicedPhonemes: string[]
   duration: number // in seconds
+  userId?: string // For signed-in users
 }
 
 export interface ProgressStats {
@@ -26,20 +27,40 @@ export interface ProgressStats {
 export class ProgressTracker {
   private sessions: SessionData[] = []
   private readonly STORAGE_KEY = "pronunciation_progress"
+  private currentUserId: string | null = null
 
   constructor() {
     this.loadFromStorage()
   }
 
-  addSession(sessionData: Omit<SessionData, "id" | "timestamp">): SessionData {
+  setUserId(userId: string | null) {
+    this.currentUserId = userId
+    if (userId) {
+      // Load user's data from Supabase
+      this.loadUserData()
+    } else {
+      // Load guest data from localStorage
+      this.loadFromStorage()
+    }
+  }
+
+  async addSession(sessionData: Omit<SessionData, "id" | "timestamp">): Promise<SessionData> {
     const session: SessionData = {
       ...sessionData,
       id: crypto.randomUUID(),
       timestamp: new Date(),
+      userId: this.currentUserId || undefined,
     }
 
     this.sessions.push(session)
-    this.saveToStorage()
+    
+    if (this.currentUserId) {
+      // Save to Supabase for signed-in users
+      await this.saveToSupabase(session)
+    } else {
+      // Save to localStorage for guest users
+      this.saveToStorage()
+    }
 
     console.log("[v0] Session saved:", session)
     console.log("[v0] Total sessions now:", this.sessions.length)
@@ -246,6 +267,76 @@ export class ProgressTracker {
   clearProgress() {
     this.sessions = []
     this.saveToStorage()
+  }
+
+  private async loadUserData() {
+    if (!this.currentUserId) return
+
+    try {
+      const { supabase } = await import('./supabase-client')
+      
+      // Load pronunciation sessions
+      const { data: sessions, error: sessionsError } = await supabase
+        .from('pronunciation_sessions')
+        .select('*')
+        .eq('user_id', this.currentUserId)
+        .order('created_at', { ascending: false })
+
+      if (sessionsError) {
+        console.error('Error loading user sessions:', sessionsError)
+        return
+      }
+
+      // Convert Supabase data to SessionData format
+      this.sessions = sessions.map(session => ({
+        id: session.id,
+        timestamp: new Date(session.created_at),
+        language: session.language,
+        sentence: session.phrase,
+        overallScore: session.accuracy_score,
+        accuracy: session.accuracy_score,
+        fluency: session.fluency_score,
+        completeness: 100, // Default completeness
+        weakPhonemes: session.weak_phonemes || [],
+        practicedPhonemes: session.practiced_words || [],
+        duration: session.session_duration || 0,
+        userId: session.user_id
+      }))
+
+      console.log('[v0] Loaded user sessions:', this.sessions.length)
+    } catch (error) {
+      console.error('Error loading user data:', error)
+    }
+  }
+
+  private async saveToSupabase(session: SessionData) {
+    if (!this.currentUserId) return
+
+    try {
+      const { supabase } = await import('./supabase-client')
+      
+      const { error } = await supabase
+        .from('pronunciation_sessions')
+        .insert({
+          user_id: this.currentUserId,
+          phrase: session.sentence,
+          language: session.language,
+          accuracy_score: session.accuracy,
+          pronunciation_score: session.overallScore,
+          fluency_score: session.fluency,
+          weak_phonemes: session.weakPhonemes,
+          practiced_words: session.practicedPhonemes,
+          session_duration: session.duration
+        })
+
+      if (error) {
+        console.error('Error saving session to Supabase:', error)
+      } else {
+        console.log('[v0] Session saved to Supabase')
+      }
+    } catch (error) {
+      console.error('Error saving to Supabase:', error)
+    }
   }
 }
 
