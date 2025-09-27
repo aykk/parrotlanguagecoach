@@ -29,26 +29,17 @@ export function AudioRecorder({ onRecordingComplete, onRecordingStart, isAnalyzi
   const isRecordingRef = useRef(false)
 
   useEffect(() => {
-    console.log("[v0] AudioRecorder component mounted")
     return () => {
-      console.log("[v0] AudioRecorder component unmounting")
       if (intervalRef.current) clearInterval(intervalRef.current)
       if (animationRef.current) cancelAnimationFrame(animationRef.current)
       if (audioContextRef.current) audioContextRef.current.close()
     }
   }, [])
 
-  useEffect(() => {
-    console.log("[v0] isRecording state changed to:", isRecording)
-  }, [isRecording])
 
-  useEffect(() => {
-    console.log("[v0] isAnalyzing prop changed to:", isAnalyzing)
-  }, [isAnalyzing])
 
   const startRecording = async () => {
     try {
-      console.log("[v0] Starting recording...")
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
@@ -71,7 +62,6 @@ export function AudioRecorder({ onRecordingComplete, onRecordingStart, isAnalyzi
           analyserRef.current.getByteFrequencyData(dataArray)
           const average = dataArray.reduce((a, b) => a + b) / bufferLength
           setAudioLevel(average)
-          console.log("[v0] Audio level:", average)
           animationRef.current = requestAnimationFrame(updateAudioLevel)
         }
       }
@@ -84,7 +74,6 @@ export function AudioRecorder({ onRecordingComplete, onRecordingStart, isAnalyzi
       }
 
       mediaRecorderRef.current.onstop = () => {
-        console.log("[v0] Recording stopped, creating blob...")
         const blob = new Blob(chunks, { type: "audio/wav" })
         setAudioBlob(blob)
         setAudioUrl(URL.createObjectURL(blob))
@@ -111,12 +100,7 @@ export function AudioRecorder({ onRecordingComplete, onRecordingStart, isAnalyzi
   }
 
   const stopRecording = () => {
-    console.log("[v0] Stop recording called...")
-    console.log("[v0] Current isRecording state:", isRecording)
-    console.log("[v0] Current mediaRecorderRef:", mediaRecorderRef.current)
-
     if (mediaRecorderRef.current && isRecording) {
-      console.log("[v0] Stopping media recorder...")
       mediaRecorderRef.current.stop()
       setIsRecording(false)
       isRecordingRef.current = false
@@ -142,31 +126,24 @@ export function AudioRecorder({ onRecordingComplete, onRecordingStart, isAnalyzi
   }
 
   const handleButtonClick = (e: React.MouseEvent) => {
-    console.log("[v0] ===== BUTTON CLICK EVENT FIRED =====")
-    console.log("[v0] Event target:", e.target)
-    console.log("[v0] Event currentTarget:", e.currentTarget)
-    console.log("[v0] Button clicked! Current isRecording:", isRecording)
-    console.log("[v0] Button disabled state (isAnalyzing):", isAnalyzing)
-    console.log("[v0] MediaRecorder state:", mediaRecorderRef.current?.state)
-
     e.preventDefault()
     e.stopPropagation()
 
     if (isRecording) {
-      console.log("[v0] Calling stopRecording...")
       stopRecording()
     } else {
-      console.log("[v0] Calling startRecording...")
       startRecording()
     }
   }
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    console.log("[v0] Mouse down on button")
+    e.preventDefault()
+    e.stopPropagation()
   }
 
   const handleMouseUp = (e: React.MouseEvent) => {
-    console.log("[v0] Mouse up on button")
+    e.preventDefault()
+    e.stopPropagation()
   }
 
   const playRecording = () => {

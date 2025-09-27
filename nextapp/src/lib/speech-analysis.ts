@@ -134,19 +134,11 @@ export class SpeechAnalyzer {
   }
 
   async analyzeAudio(audioBlob: Blob): Promise<SpeechAnalysisResult> {
-    console.log("[v0] Starting speech analysis...")
-    console.log("[v0] Audio blob size:", audioBlob.size)
-    console.log("[v0] Target text:", this.targetText)
-
     // Simulate processing time
     await new Promise((resolve) => setTimeout(resolve, 1500))
 
     const transcription = this.simulateRealisticTranscription(audioBlob)
-    console.log("[v0] Simulated transcription:", transcription)
-
-    // Analyze pronunciation
     const result = this.analyzePronunciation(transcription)
-    console.log("[v0] Analysis result:", result)
 
     return result
   }
@@ -158,18 +150,15 @@ export class SpeechAnalyzer {
 
     // If audio is too small, assume poor recording or silence
     if (audioSize < 10000) {
-      console.log("[v0] Audio too small, simulating poor transcription")
       return this.generatePoorTranscription(targetWords)
     }
 
     // Simulate varying quality based on audio size and duration
     const qualityFactor = Math.min(1, audioSize / 50000) // Normalize based on expected size
-    console.log("[v0] Quality factor:", qualityFactor)
 
     return targetWords
       .map((word) => {
         const errorChance = (1 - qualityFactor) * 0.6 + Math.random() * 0.3
-        console.log("[v0] Error chance for", word, ":", errorChance)
 
         if (errorChance > 0.4) {
           return this.introduceRealisticError(word)
@@ -239,7 +228,6 @@ export class SpeechAnalyzer {
   private analyzePronunciation(transcription: string): SpeechAnalysisResult {
     const targetWords = this.targetText.split(" ")
     const spokenWords = transcription.split(" ")
-    console.log("[v0] Analyzing:", targetWords, "vs", spokenWords)
 
     const wordAnalyses: WordAnalysis[] = targetWords.map((targetWord, index) => {
       const spokenWord = spokenWords[index] || ""
@@ -248,8 +236,6 @@ export class SpeechAnalyzer {
 
       const baseScore = similarity * 100
       const finalScore = Math.max(0, Math.min(100, baseScore))
-
-      console.log("[v0] Word analysis:", targetWord, "->", spokenWord, "similarity:", similarity, "score:", finalScore)
 
       return {
         word: targetWord,
@@ -269,7 +255,7 @@ export class SpeechAnalyzer {
     const accuracyScore = Math.round(overallScore)
     const fluencyScore = Math.round(overallScore * 0.95) // Slightly lower than accuracy
 
-    const result = {
+    return {
       overallScore: Math.round(overallScore),
       accuracy: accuracyScore,
       fluency: fluencyScore,
@@ -280,9 +266,6 @@ export class SpeechAnalyzer {
       detectedLanguage: this.language,
       confidence: overallScore > 80 ? 0.9 : overallScore > 60 ? 0.7 : 0.5,
     }
-
-    console.log("[v0] Final analysis result:", result)
-    return result
   }
 
   private calculateSimilarity(target: string, spoken: string): number {

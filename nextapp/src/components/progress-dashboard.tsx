@@ -26,13 +26,9 @@ export function ProgressDashboard() {
 
   useEffect(() => {
     const loadData = () => {
-      console.log("[v0] Loading dashboard data...")
       const newStats = progressTracker.getProgressStats()
       const newSessions = progressTracker.getRecentSessions(10)
       const newHistory = progressTracker.getScoreHistoryBySessions(30)
-
-      console.log("[v0] Dashboard loaded - Stats:", newStats)
-      console.log("[v0] Dashboard loaded - Sessions:", newSessions.length)
 
       setStats(newStats)
       setRecentSessions(newSessions)
@@ -43,20 +39,26 @@ export function ProgressDashboard() {
 
     // Listen for storage changes to update dashboard
     const handleStorageChange = () => {
-      console.log("[v0] Storage changed, reloading dashboard...")
       loadData()
     }
     window.addEventListener("storage", handleStorageChange)
 
     const handleProgressUpdate = () => {
-      console.log("[v0] Progress updated, reloading dashboard...")
       loadData()
     }
     window.addEventListener("progressUpdated", handleProgressUpdate)
 
+    const handleSessionAdded = () => {
+      setTimeout(() => {
+        loadData()
+      }, 100)
+    }
+    window.addEventListener("sessionAdded", handleSessionAdded)
+
     return () => {
       window.removeEventListener("storage", handleStorageChange)
       window.removeEventListener("progressUpdated", handleProgressUpdate)
+      window.removeEventListener("sessionAdded", handleSessionAdded)
     }
   }, [])
 

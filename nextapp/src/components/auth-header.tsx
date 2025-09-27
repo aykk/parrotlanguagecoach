@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase-client";
+import { progressTracker } from "@/lib/progress-tracker";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
@@ -29,6 +30,11 @@ export const AuthHeader = () => {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    // Clear all progress data and trigger dashboard refresh
+    progressTracker.clearAllData();
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("progressUpdated"));
+    }
   };
 
   if (loading) {

@@ -24,6 +24,7 @@ export function PronunciationTrainer() {
   const [analysisResults, setAnalysisResults] = useState<SpeechAnalysisResult | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null)
+  const sessionStartTimeRef = useRef<Date | null>(null)
   const [isAIGenerated, setIsAIGenerated] = useState(false)
   const [complexity, setComplexity] = useState<number>(5)
   const [isGenerating, setIsGenerating] = useState(false)
@@ -41,9 +42,16 @@ export function PronunciationTrainer() {
         setCurrentUser(data.user)
         progressTracker.setUserId(data.user?.id || null)
         
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
           setCurrentUser(session?.user ?? null)
           progressTracker.setUserId(session?.user?.id || null)
+          
+          // If user logged out, clear the dashboard
+          if (!session?.user) {
+            if (typeof window !== "undefined") {
+              window.dispatchEvent(new CustomEvent("progressUpdated"))
+            }
+          }
         })
         
         return () => subscription.unsubscribe()
@@ -113,7 +121,9 @@ export function PronunciationTrainer() {
   }
 
   const handleRecordingStart = () => {
-    setSessionStartTime(new Date())
+    const startTime = new Date()
+    setSessionStartTime(startTime)
+    sessionStartTimeRef.current = startTime
   }
 
   const handleTextToSpeech = () => {
@@ -132,11 +142,15 @@ export function PronunciationTrainer() {
         const results = await speechAnalyzerRef.current.analyzeAudio(blob)
         setAnalysisResults(results)
 
-        if (sessionStartTime) {
-          const duration = (Date.now() - sessionStartTime.getTime()) / 1000
+        const startTime = sessionStartTimeRef.current
+        if (startTime) {
+          const duration = (Date.now() - startTime.getTime()) / 1000
 
           const practicedPhonemes = results.words.flatMap((word) => word.phonemes)
 
+          // Add a small delay to ensure everything is initialized
+          await new Promise(resolve => setTimeout(resolve, 100))
+          
           await progressTracker.addSession({
             language: selectedLanguage,
             sentence: currentSentence,
@@ -309,6 +323,7 @@ export function PronunciationTrainer() {
 
           {/* Audio Recording */}
           <AudioRecorder
+            key="audio-recorder"
             onRecordingComplete={handleRecordingComplete}
             onRecordingStart={handleRecordingStart}
             isAnalyzing={isAnalyzing}

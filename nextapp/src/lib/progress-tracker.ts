@@ -34,17 +34,32 @@ export class ProgressTracker {
   }
 
   setUserId(userId: string | null) {
+    // Don't reset if we're already in the same state
+    if (this.currentUserId === userId) {
+      return
+    }
+    
     this.currentUserId = userId
     if (userId) {
       // Load user's data from Supabase
       this.loadUserData()
     } else {
-      // Load guest data from localStorage
-      this.loadFromStorage()
+      // Only clear sessions if we actually have sessions to preserve
+      if (this.sessions.length > 0) {
+        // Don't clear sessions, just switch to guest mode
+        this.loadFromStorage()
+      } else {
+        this.loadFromStorage()
+      }
     }
   }
 
   async addSession(sessionData: Omit<SessionData, "id" | "timestamp">): Promise<SessionData> {
+    // Ensure we're properly initialized
+    if (typeof window === "undefined") {
+      throw new Error("Progress tracker not available in server environment")
+    }
+
     const session: SessionData = {
       ...sessionData,
       id: crypto.randomUUID(),
@@ -62,12 +77,8 @@ export class ProgressTracker {
       this.saveToStorage()
     }
 
-    console.log("[v0] Session saved:", session)
-    console.log("[v0] Total sessions now:", this.sessions.length)
-
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent("progressUpdated"))
-    }
+    window.dispatchEvent(new CustomEvent("progressUpdated"))
+    window.dispatchEvent(new CustomEvent("sessionAdded"))
 
     return session
   }
@@ -153,7 +164,7 @@ export class ProgressTracker {
 
     const streakDays = this.calculateStreakDays()
 
-    const stats = {
+    return {
       totalSessions,
       averageScore: Math.round(averageScore),
       improvementRate: Math.round(improvementRate),
@@ -163,10 +174,6 @@ export class ProgressTracker {
       recentTrend,
       streakDays,
     }
-
-    console.log("[v0] Progress stats calculated:", stats)
-
-    return stats
   }
 
   getScoreHistory(days = 30): Array<{ date: string; score: number; sessions: number }> {
@@ -269,6 +276,13 @@ export class ProgressTracker {
     this.saveToStorage()
   }
 
+  clearAllData() {
+    this.sessions = []
+    this.currentUserId = null
+    this.saveToStorage()
+  }
+
+
   private async loadUserData() {
     if (!this.currentUserId) return
 
@@ -303,7 +317,6 @@ export class ProgressTracker {
         userId: session.user_id
       }))
 
-      console.log('[v0] Loaded user sessions:', this.sessions.length)
     } catch (error) {
       console.error('Error loading user data:', error)
     }
@@ -331,8 +344,6 @@ export class ProgressTracker {
 
       if (error) {
         console.error('Error saving session to Supabase:', error)
-      } else {
-        console.log('[v0] Session saved to Supabase')
       }
     } catch (error) {
       console.error('Error saving to Supabase:', error)
