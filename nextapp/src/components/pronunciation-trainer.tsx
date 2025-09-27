@@ -154,6 +154,9 @@ export function PronunciationTrainer() {
                 accuracy_score: results.accuracy,
                 pronunciation_score: results.overallScore,
                 fluency_score: results.fluency,
+                weak_phonemes: results.weakPhonemes || [],
+                practiced_words: currentSentence.split(' ').map(word => word.toLowerCase().replace(/[^\w]/g, '')),
+                session_duration: duration,
               })
             }
           } catch (error) {
@@ -216,6 +219,9 @@ export function PronunciationTrainer() {
               accuracy_score: mockResults.accuracy,
               pronunciation_score: mockResults.overallScore,
               fluency_score: mockResults.fluency,
+              weak_phonemes: mockResults.weakPhonemes || [],
+              practiced_words: currentSentence.split(' ').map(word => word.toLowerCase().replace(/[^\w]/g, '')),
+              session_duration: duration,
             })
           }
         } catch (error) {

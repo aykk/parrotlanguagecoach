@@ -2,12 +2,16 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase-client";
 import { PronunciationTrainer } from "@/components/pronunciation-trainer";
+import { AdaptiveDifficulty } from "@/components/adaptive-difficulty";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
 export default function PracticePage() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [adaptiveDifficulty, setAdaptiveDifficulty] = useState<number>(5);
+  const [recommendedPhonemes, setRecommendedPhonemes] = useState<string[]>([]);
+  const [recommendedWords, setRecommendedWords] = useState<string[]>([]);
 
   useEffect(() => {
     const init = async () => {
@@ -67,7 +71,19 @@ export default function PracticePage() {
           </div>
         </div>
         
-        <PronunciationTrainer />
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <div className="lg:col-span-3">
+            <PronunciationTrainer />
+          </div>
+          <div className="space-y-4">
+            <AdaptiveDifficulty
+              language="english"
+              onDifficultyChange={setAdaptiveDifficulty}
+              onRecommendedPhonemes={setRecommendedPhonemes}
+              onRecommendedWords={setRecommendedWords}
+            />
+          </div>
+        </div>
       </div>
     </main>
   );

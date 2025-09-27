@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase-client";
-import { ProgressService, UserProgress, PronunciationSession } from "@/lib/progress-service";
+import { ProgressService, UserProgress, PronunciationSession, UserLevel } from "@/lib/progress-service";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -12,6 +12,8 @@ export default function ProgressPage() {
   const [user, setUser] = useState<any>(null);
   const [progress, setProgress] = useState<UserProgress | null>(null);
   const [sessions, setSessions] = useState<PronunciationSession[]>([]);
+  const [currentLevel, setCurrentLevel] = useState<UserLevel | null>(null);
+  const [nextLevel, setNextLevel] = useState<UserLevel | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,6 +30,14 @@ export default function ProgressPage() {
         // Fetch user progress
         const userProgress = await ProgressService.getUserProgress(user.id);
         setProgress(userProgress);
+        
+        // Get level information
+        if (userProgress) {
+          const currentLevelInfo = ProgressService.getUserLevel(userProgress.total_xp || 0);
+          const nextLevelInfo = ProgressService.getNextLevel(currentLevelInfo.level);
+          setCurrentLevel(currentLevelInfo);
+          setNextLevel(nextLevelInfo);
+        }
         
         // Fetch recent sessions
         const userSessions = await ProgressService.getUserSessions(user.id, 10);
@@ -82,6 +92,42 @@ export default function ProgressPage() {
           </div>
         </div>
 
+        {/* Level System */}
+        {currentLevel && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
+                  {currentLevel.level}
+                </div>
+                <div>
+                  <div className="text-2xl font-bold">{currentLevel.title}</div>
+                  <div className="text-sm text-gray-600">{currentLevel.description}</div>
+                </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span>Total XP: {progress?.total_xp || 0}</span>
+                  {nextLevel && (
+                    <span>Next Level: {nextLevel.xp_required - (progress?.total_xp || 0)} XP needed</span>
+                  )}
+                </div>
+                {nextLevel && (
+                  <Progress 
+                    value={((progress?.total_xp || 0) - currentLevel.xp_required) / (nextLevel.xp_required - currentLevel.xp_required) * 100} 
+                    className="h-2" 
+                  />
+                )}
+                <div className="text-sm text-gray-600">
+                  <strong>Unlocked Features:</strong> {currentLevel.unlocked_features.join(", ")}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
@@ -122,6 +168,83 @@ export default function ProgressPage() {
               <Badge variant="secondary" className="mt-2">
                 🔥 Keep it up!
               </Badge>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Weak Areas & Recommendations */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Areas to Improve</CardTitle>
+              <CardDescription>Focus on these phonemes and words</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-medium text-sm text-gray-700 mb-2">Weak Phonemes</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {(progress?.weak_phonemes || []).slice(0, 5).map((phoneme, index) => (
+                      <Badge key={index} variant="destructive" className="text-xs">
+                        {phoneme}
+                      </Badge>
+                    ))}
+                    {(!progress?.weak_phonemes || progress.weak_phonemes.length === 0) && (
+                      <span className="text-sm text-gray-500">No weak phonemes detected!</span>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <h4 className="font-medium text-sm text-gray-700 mb-2">Difficult Words</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {(progress?.weak_words || []).slice(0, 5).map((word, index) => (
+                      <Badge key={index} variant="destructive" className="text-xs">
+                        {word}
+                      </Badge>
+                    ))}
+                    {(!progress?.weak_words || progress.weak_words.length === 0) && (
+                      <span className="text-sm text-gray-500">No difficult words detected!</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Mastered Skills</CardTitle>
+              <CardDescription>You're doing great with these!</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-medium text-sm text-gray-700 mb-2">Mastered Phonemes</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {(progress?.mastered_phonemes || []).slice(0, 5).map((phoneme, index) => (
+                      <Badge key={index} variant="default" className="text-xs bg-green-600">
+                        {phoneme}
+                      </Badge>
+                    ))}
+                    {(!progress?.mastered_phonemes || progress.mastered_phonemes.length === 0) && (
+                      <span className="text-sm text-gray-500">Keep practicing to master phonemes!</span>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <h4 className="font-medium text-sm text-gray-700 mb-2">Mastered Words</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {(progress?.mastered_words || []).slice(0, 5).map((word, index) => (
+                      <Badge key={index} variant="default" className="text-xs bg-green-600">
+                        {word}
+                      </Badge>
+                    ))}
+                    {(!progress?.mastered_words || progress.mastered_words.length === 0) && (
+                      <span className="text-sm text-gray-500">Keep practicing to master words!</span>
+                    )}
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>

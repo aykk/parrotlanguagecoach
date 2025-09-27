@@ -13,6 +13,9 @@ CREATE TABLE IF NOT EXISTS pronunciation_sessions (
   accuracy_score DECIMAL(5,2) NOT NULL CHECK (accuracy_score >= 0 AND accuracy_score <= 100),
   pronunciation_score DECIMAL(5,2) NOT NULL CHECK (pronunciation_score >= 0 AND pronunciation_score <= 100),
   fluency_score DECIMAL(5,2) NOT NULL CHECK (fluency_score >= 0 AND fluency_score <= 100),
+  weak_phonemes TEXT[] DEFAULT '{}',
+  practiced_words TEXT[] DEFAULT '{}',
+  session_duration DECIMAL(8,2) DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -25,6 +28,12 @@ CREATE TABLE IF NOT EXISTS user_progress (
   average_pronunciation DECIMAL(5,2) DEFAULT 0,
   average_fluency DECIMAL(5,2) DEFAULT 0,
   streak_days INTEGER DEFAULT 0,
+  current_level INTEGER DEFAULT 1,
+  total_xp INTEGER DEFAULT 0,
+  weak_phonemes TEXT[] DEFAULT '{}',
+  mastered_phonemes TEXT[] DEFAULT '{}',
+  weak_words TEXT[] DEFAULT '{}',
+  mastered_words TEXT[] DEFAULT '{}',
   last_practice_date DATE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
