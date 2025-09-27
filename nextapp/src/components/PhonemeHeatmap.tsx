@@ -19,11 +19,28 @@ export default function PhonemeHeatmap({ phonemeScores }: HeatmapProps) {
         x: phonemes,
         y: [""],
         type: "heatmap",
-        colorscale: "RdYlGn",
+        colorscale: [
+        [0, "red"],
+        [0.5, "yellow"],
+        [1, "green"],
+      	],
         zmin: 0,
         zmax: 100,
-      }]}
-      layout={{ title: { text: "Phonetic Profile Heatmap" }}}
+
+		text: [
+            phonemes.map(
+              (p, i) => `${p}: ${scores[i]}% accuracy`
+            ),
+          ],
+          hoverinfo: "text", // only show custom text
+        } as any,
+      ]}
+      layout={{
+		title: { text: "Phonetic Profile Heatmap" },
+		xaxis: { title: { text: "Phonemes" }, fixedrange: true },
+        yaxis: { visible: false, fixedrange: true },
+		
+		}}
       style={{ width: "100%", height: "400px" }}
     />
   );
