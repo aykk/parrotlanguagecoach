@@ -16,6 +16,8 @@ import { SpeechAnalyzer, type SpeechAnalysisResult } from "@/lib/speech-analysis
 import { progressTracker } from "@/lib/progress-tracker"
 import { getLanguageList, getLanguageConfig, getRandomSentence, isRTLLanguage } from "@/lib/language-config"
 import { aiPhraseGenerator } from "@/lib/ai-phrase-generator"
+import { ProgressService } from "@/lib/progress-service"
+import { supabase } from "@/lib/supabase-client"
 
 export function PronunciationTrainer() {
   const [selectedLanguage, setSelectedLanguage] = useState<string>("english")
@@ -140,6 +142,23 @@ export function PronunciationTrainer() {
             practicedPhonemes: practicedPhonemes,
             duration,
           })
+
+          // Save to Supabase
+          try {
+            const { data: { user } } = await supabase.auth.getUser()
+            if (user) {
+              await ProgressService.saveSession({
+                user_id: user.id,
+                phrase: currentSentence,
+                language: selectedLanguage,
+                accuracy_score: results.accuracy,
+                pronunciation_score: results.overallScore,
+                fluency_score: results.fluency,
+              })
+            }
+          } catch (error) {
+            console.error('Failed to save session to Supabase:', error)
+          }
         }
       }
     } catch (error) {
@@ -185,6 +204,23 @@ export function PronunciationTrainer() {
           practicedPhonemes: practicedPhonemes,
           duration,
         })
+
+        // Save mock session to Supabase too
+        try {
+          const { data: { user } } = await supabase.auth.getUser()
+          if (user) {
+            await ProgressService.saveSession({
+              user_id: user.id,
+              phrase: currentSentence,
+              language: selectedLanguage,
+              accuracy_score: mockResults.accuracy,
+              pronunciation_score: mockResults.overallScore,
+              fluency_score: mockResults.fluency,
+            })
+          }
+        } catch (error) {
+          console.error('Failed to save mock session to Supabase:', error)
+        }
       }
     } finally {
       setIsAnalyzing(false)
