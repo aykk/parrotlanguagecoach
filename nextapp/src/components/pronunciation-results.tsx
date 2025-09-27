@@ -41,9 +41,9 @@ export function PronunciationResults({ results, sentence, language, onNewPhraseS
       const info = getPhonemeInfo(phoneme, language)
       return {
         phoneme,
-        difficulty: info?.difficulty || 5,
-        name: info?.name || phoneme,
-        examples: info?.examples || [],
+        difficulty: (info as any)?.difficulty || 5,
+        name: (info as any)?.name || phoneme,
+        examples: (info as any)?.examples || [],
       }
     })
     .sort((a, b) => b.difficulty - a.difficulty)

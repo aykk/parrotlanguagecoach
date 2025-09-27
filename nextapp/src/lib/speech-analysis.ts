@@ -204,10 +204,6 @@ export class SpeechAnalyzer {
       very: ["wery", "vely", "bery"],
       water: ["vater", "wata", "vata"],
 
-      // V/W confusion
-      very: ["wery", "bery"],
-      water: ["vater", "wata"],
-
       // L sounds
       love: ["rove", "lobe", "lub"],
       little: ["rittle", "litter", "littel"],
@@ -380,7 +376,7 @@ export class SpeechAnalyzer {
     weakPhonemes.forEach((phoneme) => {
       const phonemeInfo = phonemeMap[phoneme as keyof typeof phonemeMap]
       if (phonemeInfo) {
-        suggestions.push(`Practice the ${phonemeInfo.name} sound with words like: ${phonemeInfo.examples.join(", ")}`)
+        suggestions.push(`Practice the ${(phonemeInfo as any).name} sound with words like: ${(phonemeInfo as any).examples.join(", ")}`)
       }
     })
 

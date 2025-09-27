@@ -97,21 +97,6 @@ export function PronunciationTrainer() {
     if ("speechSynthesis" in window && currentSentence) {
       const utterance = new SpeechSynthesisUtterance(currentSentence)
       utterance.lang = languageConfig.code
-
-      // Get available voices and select the best one for the language
-      const voices = speechSynthesis.getVoices()
-      const preferredVoice = selectBestVoice(voices, languageConfig.code)
-
-      if (preferredVoice) {
-        utterance.voice = preferredVoice
-        console.log(`[v0] Selected voice: ${preferredVoice.name} for ${languageConfig.code}`)
-      }
-
-      // Apply enhanced voice settings for more natural speech
-      utterance.pitch = languageConfig.voiceSettings.pitch
-      utterance.rate = languageConfig.voiceSettings.rate
-      utterance.volume = languageConfig.voiceSettings.volume
-
       speechSynthesis.speak(utterance)
     }
   }
@@ -191,35 +176,6 @@ export function PronunciationTrainer() {
     }
   }
 
-  const selectBestVoice = (voices: SpeechSynthesisVoice[], langCode: string) => {
-    if (voices.length === 0) return null
-
-    // Priority order: neural/premium voices, then native voices, then any matching language
-    const langPrefix = langCode.split("-")[0] // e.g., 'en' from 'en-US'
-
-    // Look for high-quality voices (neural, premium, enhanced)
-    const premiumVoice = voices.find(
-      (voice) =>
-        voice.lang.startsWith(langCode) &&
-        (voice.name.toLowerCase().includes("neural") ||
-          voice.name.toLowerCase().includes("premium") ||
-          voice.name.toLowerCase().includes("enhanced") ||
-          voice.name.toLowerCase().includes("natural")),
-    )
-
-    if (premiumVoice) return premiumVoice
-
-    // Look for exact language match
-    const exactMatch = voices.find((voice) => voice.lang === langCode)
-    if (exactMatch) return exactMatch
-
-    // Look for language family match (e.g., en-GB for en-US)
-    const familyMatch = voices.find((voice) => voice.lang.startsWith(langPrefix))
-    if (familyMatch) return familyMatch
-
-    // Fallback to first available voice
-    return voices[0]
-  }
 
   return (
     <div className="max-w-6xl mx-auto">
