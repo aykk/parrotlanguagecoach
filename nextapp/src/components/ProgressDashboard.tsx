@@ -4,6 +4,8 @@ Stacked area chart showing % of sounds
 over practice sessions
 
 Lets learners see improvement over time
+
+Can only use if we store the accuracies of each session
 */
 
 import React from "react";
