@@ -200,9 +200,9 @@ export default function PhonemeHeatmap({ phonemeScores }: HeatmapProps) {
                     {ipaSymbol}
                   </button>
                   {/* Custom tooltip */}
-                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap">
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 max-w-xs min-w-48">
                     <div className="font-semibold">{phoneme} → {ipaSymbol}</div>
-                    <div className="mt-1 max-w-xs">{tip}</div>
+                    <div className="mt-1 whitespace-normal">{tip}</div>
                     <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
                   </div>
                 </div>

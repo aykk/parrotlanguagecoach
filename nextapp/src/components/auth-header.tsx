@@ -77,7 +77,7 @@ export const AuthHeader = () => {
               {user.email?.charAt(0).toUpperCase() || "U"}
             </AvatarFallback>
           </Avatar>
-          <span className="text-sm text-white font-medium hidden sm:block" style={{ textShadow: '0 0 1px black' }}>
+          <span className="text-sm text-black font-medium hidden sm:block">
             {user.email}
           </span>
         </div>

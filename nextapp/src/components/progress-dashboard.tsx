@@ -20,6 +20,54 @@ import { TrendingUp, TrendingDown, Minus, Calendar, Target, Flame, Clock, Globe,
 import { progressTracker, type ProgressStats, type SessionData } from "@/lib/progress-tracker"
 import PhonemeProgressChart from "./PhonemeProgressChart"
 
+// Phoneme pronunciation tips
+const PHONEME_TIPS: { [key: string]: string } = {
+  'i': 'Like "beat" - spread your lips and raise your tongue high',
+  'ɪ': 'Like "bit" - slightly lower tongue than /i/',
+  'e': 'Like "bait" - tongue mid-high, lips slightly spread',
+  'ɛ': 'Like "bet" - tongue mid-low, lips slightly spread',
+  'æ': 'Like "bat" - tongue low, lips spread wide',
+  'ɑ': 'Like "pot" - tongue low and back, lips open',
+  'ɔ': 'Like "bought" - tongue mid-low and back, lips rounded',
+  'o': 'Like "boat" - tongue mid-high and back, lips rounded',
+  'ʊ': 'Like "book" - tongue high and back, lips slightly rounded',
+  'u': 'Like "boot" - tongue high and back, lips very rounded',
+  'ʌ': 'Like "but" - tongue mid-low and central',
+  'ə': 'Like "about" - tongue mid and central, neutral lips',
+  'p': 'Like "pop" - close lips, then release with a puff',
+  'b': 'Like "bob" - close lips, then release with voice',
+  't': 'Like "tot" - tongue tip touches roof, then releases',
+  'd': 'Like "dot" - tongue tip touches roof, then releases with voice',
+  'k': 'Like "cot" - back of tongue touches roof, then releases',
+  'g': 'Like "got" - back of tongue touches roof, then releases with voice',
+  'f': 'Like "fife" - top teeth touch bottom lip, air flows through',
+  'v': 'Like "vive" - top teeth touch bottom lip, air flows with voice',
+  'θ': 'Like "think" - tongue tip between teeth, air flows through',
+  'ð': 'Like "this" - tongue tip between teeth, air flows with voice',
+  's': 'Like "sip" - tongue near roof, air flows through narrow gap',
+  'z': 'Like "zip" - tongue near roof, air flows with voice',
+  'ʃ': 'Like "ship" - tongue near roof, lips slightly rounded',
+  'ʒ': 'Like "measure" - tongue near roof, lips slightly rounded, with voice',
+  'h': 'Like "hop" - air flows freely through open mouth',
+  'm': 'Like "mom" - lips closed, air flows through nose',
+  'n': 'Like "non" - tongue tip touches roof, air flows through nose',
+  'ŋ': 'Like "sing" - back of tongue touches roof, air flows through nose',
+  'l': 'Like "loll" - tongue tip touches roof, air flows around sides',
+  'r': 'Like "roar" - tongue tip curled back, or bunched in middle',
+  'w': 'Like "wow" - lips rounded, tongue high and back',
+  'j': 'Like "yes" - tongue high and front, lips spread'
+}
+
+// Convert phoneme to IPA symbol
+const toIPA = (phoneme: string): string => {
+  const ipaMap: { [key: string]: string } = {
+    'i': 'i', 'ɪ': 'ɪ', 'e': 'e', 'ɛ': 'ɛ', 'æ': 'æ', 'ɑ': 'ɑ', 'ɔ': 'ɔ', 'o': 'o', 'ʊ': 'ʊ', 'u': 'u', 'ʌ': 'ʌ', 'ə': 'ə',
+    'p': 'p', 'b': 'b', 't': 't', 'd': 'd', 'k': 'k', 'g': 'g', 'f': 'f', 'v': 'v', 'θ': 'θ', 'ð': 'ð', 's': 's', 'z': 'z',
+    'ʃ': 'ʃ', 'ʒ': 'ʒ', 'h': 'h', 'm': 'm', 'n': 'n', 'ŋ': 'ŋ', 'l': 'l', 'r': 'r', 'w': 'w', 'j': 'j'
+  }
+  return ipaMap[phoneme] || phoneme
+}
+
 // Tooltip component for session details
 const SessionTooltip = ({ session }: { session: SessionData }) => {
   return (
@@ -247,7 +295,7 @@ export function ProgressDashboard() {
   const languageMap: { [key: string]: { name: string; flag: string } } = {
     'en-US': { name: 'English', flag: '🇺🇸' },
     'en': { name: 'English', flag: '🇺🇸' },
-    'en-GB': { name: 'English', flag: '🇺🇸' },
+    'en-GB': { name: 'English', flag: '🇬🇧' },
     'es-ES': { name: 'Spanish', flag: '🇪🇸' },
     'es': { name: 'Spanish', flag: '🇪🇸' },
     'fr-FR': { name: 'French', flag: '🇫🇷' },
@@ -260,10 +308,22 @@ export function ProgressDashboard() {
     'pt': { name: 'Portuguese', flag: '🇧🇷' },
   }
 
-  const languageData = Object.entries(stats.languageBreakdown).map(([language, count]) => {
+  // Consolidate language data to avoid duplicates
+  const consolidatedLanguages: { [key: string]: number } = {}
+  Object.entries(stats.languageBreakdown).forEach(([language, count]) => {
     const langInfo = languageMap[language] || { name: language.charAt(0).toUpperCase() + language.slice(1), flag: '🌍' }
+    const baseName = langInfo.name
+    if (consolidatedLanguages[baseName]) {
+      consolidatedLanguages[baseName] += count
+    } else {
+      consolidatedLanguages[baseName] = count
+    }
+  })
+
+  const languageData = Object.entries(consolidatedLanguages).map(([language, count]) => {
+    const langInfo = languageMap[language] || { name: language, flag: '🌍' }
     return {
-      name: `${langInfo.flag} ${langInfo.name}`,
+      name: `${langInfo.flag} ${language}`,
       value: count,
     }
   })
@@ -410,12 +470,19 @@ export function ProgressDashboard() {
                   {stats.strongestPhonemes.length > 0 ? (
                     stats.strongestPhonemes.map((phoneme, index) => {
                       const accuracy = stats.phonemeAccuracy[phoneme] || 0;
+                      const symbol = toIPA(phoneme) ?? phoneme;
+                      const tip = PHONEME_TIPS[symbol] || `Pronounce as ${phoneme}`;
                       return (
                         <div
                           key={index}
                           className="flex items-center justify-between p-2 rounded border"
                         >
-                          <span className="font-mono text-lg">/{phoneme}/</span>
+                          <span 
+                            className="font-mono text-lg tooltip-trigger cursor-help"
+                            data-tooltip={`${phoneme} → ${symbol}\n\n${tip}`}
+                          >
+                            /{phoneme}/
+                          </span>
                           <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
                             {accuracy}%
                           </Badge>
@@ -442,17 +509,26 @@ export function ProgressDashboard() {
                     Object.entries(stats.phonemeAccuracy)
                       .filter(([_, accuracy]) => accuracy < 60)
                       .sort(([, a], [, b]) => a - b)
-                      .map(([phoneme, accuracy], index) => (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between p-2 rounded border"
-                        >
-                          <span className="font-mono text-lg">/{phoneme}/</span>
-                          <Badge variant="destructive">
-                            {accuracy}%
-                          </Badge>
-                        </div>
-                      ))
+                      .map(([phoneme, accuracy], index) => {
+                        const symbol = toIPA(phoneme) ?? phoneme;
+                        const tip = PHONEME_TIPS[symbol] || `Pronounce as ${phoneme}`;
+                        return (
+                          <div
+                            key={index}
+                            className="flex items-center justify-between p-2 rounded border"
+                          >
+                            <span 
+                              className="font-mono text-lg tooltip-trigger cursor-help"
+                              data-tooltip={`${phoneme} → ${symbol}\n\n${tip}`}
+                            >
+                              /{phoneme}/
+                            </span>
+                            <Badge variant="destructive">
+                              {accuracy}%
+                            </Badge>
+                          </div>
+                        );
+                      })
                   ) : (
                     <p className="text-muted-foreground text-sm">Great job! All your phonemes are performing well.</p>
                   )}

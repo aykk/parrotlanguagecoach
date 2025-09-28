@@ -1263,8 +1263,8 @@ export default function AzureSpeechTest() {
                                       return (
                                         <span
                                           key={j}
-                                          className={`inline-block px-2 py-1 text-xs rounded-lg border cursor-pointer hover:bg-gray-100 transition-colors ${bad ? "border-red-300" : "border-gray-300"}`}
-                                          title={`Accuracy: ${pAcc.toFixed(1)}%\n\n${tip}\n\nClick to hear pronunciation`}
+                                          className={`inline-block px-2 py-1 text-xs rounded-lg border cursor-pointer hover:bg-gray-100 transition-colors tooltip-trigger ${bad ? "border-red-300" : "border-gray-300"}`}
+                                          data-tooltip={`Accuracy: ${pAcc.toFixed(1)}%\n\n${tip}\n\nClick to hear pronunciation`}
                                           onClick={() => speakPhoneme(p.Phoneme)}
                                         >
                                           /{symbol}/
@@ -1360,9 +1360,9 @@ export default function AzureSpeechTest() {
                                 <div className="flex items-center justify-between mb-3">
                                   <div className="flex items-center gap-3">
                                     <span 
-                                      className="text-lg font-bold text-gray-800 cursor-pointer hover:text-blue-600 transition-colors"
+                                      className="text-lg font-bold text-gray-800 cursor-pointer hover:text-blue-600 transition-colors tooltip-trigger"
+                                      data-tooltip={`Click to hear pronunciation\n\n${PHONEME_TIPS[item.phoneme] || `Pronounce as ${item.phoneme}`}`}
                                       onClick={() => speakPhoneme(item.phoneme)}
-                                      title={`Click to hear pronunciation\n\n${PHONEME_TIPS[item.phoneme] || `Pronounce as ${item.phoneme}`}`}
                                     >
                                       /{item.phoneme}/
                                     </span>

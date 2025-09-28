@@ -183,12 +183,13 @@
 
 /* Custom tooltip styles for better visibility */
 @layer utilities {
-  [title] {
+  .tooltip-trigger {
     position: relative;
+    cursor: help;
   }
   
-  [title]:hover::after {
-    content: attr(title);
+  .tooltip-trigger:hover::after {
+    content: attr(data-tooltip);
     position: absolute;
     bottom: 100%;
     left: 50%;
@@ -207,7 +208,7 @@
     animation: tooltipFadeIn 0.2s ease-out;
   }
   
-  [title]:hover::before {
+  .tooltip-trigger:hover::before {
     content: '';
     position: absolute;
     bottom: 100%;
