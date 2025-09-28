@@ -16,7 +16,7 @@ import {
   Pie,
   Cell,
 } from "recharts"
-import { TrendingUp, TrendingDown, Minus, Calendar, Target, Flame, Clock, Globe, MessageSquare, Timer } from "lucide-react"
+import { TrendingUp, TrendingDown, Minus, Calendar, Target, Flame, Clock, Globe, MessageSquare, Timer, Trash2, AlertTriangle } from "lucide-react"
 import { progressTracker, type ProgressStats, type SessionData } from "@/lib/progress-tracker"
 
 // Tooltip component for session details
@@ -106,6 +106,22 @@ export function ProgressDashboard() {
   const [stats, setStats] = useState<ProgressStats | null>(null)
   const [recentSessions, setRecentSessions] = useState<SessionData[]>([])
   const [scoreHistory, setScoreHistory] = useState<Array<{ session: number; score: number; date: string }>>([])
+  const [showClearAllConfirm, setShowClearAllConfirm] = useState(false)
+
+  const deleteSession = (sessionId: string) => {
+    if (confirm("Are you sure you want to delete this session?")) {
+      progressTracker.deleteSession(sessionId)
+      // Data will be reloaded by the event listener
+    }
+  }
+
+  const clearAllSessions = () => {
+    if (confirm("Are you sure you want to delete ALL sessions? This cannot be undone.")) {
+      progressTracker.clearProgress()
+      setShowClearAllConfirm(false)
+      // Data will be reloaded by the event listener
+    }
+  }
 
   useEffect(() => {
     const loadData = () => {
@@ -378,8 +394,26 @@ export function ProgressDashboard() {
         <TabsContent value="sessions" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Recent Practice Sessions</CardTitle>
-              <CardDescription>Your latest pronunciation practice history</CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Recent Practice Sessions</CardTitle>
+                  <CardDescription>Your latest pronunciation practice history</CardDescription>
+                </div>
+                {recentSessions.length > 0 && (
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      clearAllSessions()
+                    }}
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Delete all sessions"
+                  >
+                    <AlertTriangle className="w-4 h-4" />
+                    Clear All
+                  </button>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -404,6 +438,17 @@ export function ProgressDashboard() {
                         <Clock className="w-4 h-4" />
                         <span className="text-sm">{Math.round(session.duration)}s</span>
                       </div>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          deleteSession(session.id)
+                        }}
+                        className="opacity-0 group-hover:opacity-100 p-2 hover:bg-red-50 rounded-lg transition-all duration-200 text-red-500 hover:text-red-700"
+                        title="Delete session"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                     <SessionTooltip session={session} />
                   </div>

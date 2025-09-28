@@ -274,12 +274,25 @@ export class ProgressTracker {
   clearProgress() {
     this.sessions = []
     this.saveToStorage()
+    
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("progressUpdated"))
+    }
   }
 
   clearAllData() {
     this.sessions = []
     this.currentUserId = null
     this.saveToStorage()
+  }
+
+  deleteSession(sessionId: string) {
+    this.sessions = this.sessions.filter(session => session.id !== sessionId)
+    this.saveToStorage()
+    
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("progressUpdated"))
+    }
   }
 
 
