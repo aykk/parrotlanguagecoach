@@ -733,6 +733,7 @@ export default function AzureSpeechTest() {
             completeness: actualCompleteness || 0,
             weakPhonemes: weakPhonemes,
             practicedPhonemes: practicedPhonemes,
+            phonemeScores: extractedScores,
             duration,
           };
           
@@ -788,18 +789,18 @@ export default function AzureSpeechTest() {
       score: accScore,
       text: accScore === null || accScore === undefined 
         ? "How clearly you pronounce each sound. Higher scores mean your pronunciation matches the target language better."
-        : accScore < 80 
+        : `How clearly you pronounce each sound. Higher scores mean your pronunciation matches the target language better.\n\n${accScore < 80 
           ? "Focus on pronouncing each sound clearly. Practice individual phonemes that scored low." 
-          : "Great pronunciation accuracy! Keep up the excellent work."
+          : "Great pronunciation accuracy! Keep up the excellent work."}`
     },
     {
       title: "Fluency",
       score: fluencyScore,
       text: fluencyScore === null || fluencyScore === undefined 
         ? "How smoothly and naturally you speak. Higher scores mean fewer pauses and more natural speech flow."
-        : fluencyScore < 80 
+        : `How smoothly and naturally you speak. Higher scores mean fewer pauses and more natural speech flow.\n\n${fluencyScore < 80 
           ? "Work on speaking more smoothly. Practice connecting words naturally without long pauses." 
-          : "Excellent fluency! Your speech flows naturally."
+          : "Excellent fluency! Your speech flows naturally."}`
     },
     // Only include intonation for English
     ...(lang === "en-US" ? [{
@@ -807,18 +808,18 @@ export default function AzureSpeechTest() {
       score: intonationScore,
       text: intonationScore === null || intonationScore === undefined 
         ? "The rhythm and melody of your speech. Higher scores mean your intonation matches native speakers better."
-        : intonationScore < 80 
+        : `The rhythm and melody of your speech. Higher scores mean your intonation matches native speakers better.\n\n${intonationScore < 80 
           ? "Focus on intonation and rhythm. Practice the natural melody of the language." 
-          : "Great intonation! Your speech rhythm sounds natural."
+          : "Great intonation! Your speech rhythm sounds natural."}`
     }] : []),
     {
       title: "Completeness",
       score: completenessScore,
       text: completenessScore === null || completenessScore === undefined 
         ? "How much of the sentence you said. Higher scores mean you spoke more of the target text."
-        : completenessScore < 80 
+        : `How much of the sentence you said. Higher scores mean you spoke more of the target text.\n\n${completenessScore < 80 
           ? "Make sure to say all the words. Practice the complete sentence without skipping parts." 
-          : "Perfect completeness! You said everything clearly."
+          : "Perfect completeness! You said everything clearly."}`
     }
   ];
 

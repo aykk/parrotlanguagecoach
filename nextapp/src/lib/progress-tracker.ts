@@ -9,6 +9,7 @@ export interface SessionData {
   completeness: number
   weakPhonemes: string[]
   practicedPhonemes: string[]
+  phonemeScores?: { [phoneme: string]: number } // Individual phoneme accuracy scores
   duration: number // in seconds
   userId?: string // For signed-in users
 }
@@ -19,6 +20,7 @@ export interface ProgressStats {
   improvementRate: number
   strongestPhonemes: string[]
   weakestPhonemes: string[]
+  recentPoorPhonemes: Array<{ phoneme: string; accuracy: number; sessionDate: Date }>
   phonemeAccuracy: { [phoneme: string]: number } // Average accuracy for each phoneme
   languageBreakdown: { [key: string]: number }
   recentTrend: "improving" | "stable" | "declining"
@@ -110,6 +112,7 @@ export class ProgressTracker {
         improvementRate: 0,
         strongestPhonemes: [],
         weakestPhonemes: [],
+        recentPoorPhonemes: [],
         phonemeAccuracy: {},
         languageBreakdown: {},
         recentTrend: "stable",
@@ -174,6 +177,9 @@ export class ProgressTracker {
       .reverse()
       .map((p) => p.phoneme)
 
+    // Get phonemes that scored poorly in recent sessions (last 5 sessions)
+    const recentPoorPhonemes = this.getRecentPoorPhonemes(5)
+
     const languageBreakdown: { [key: string]: number } = {}
     this.sessions.forEach((session) => {
       languageBreakdown[session.language] = (languageBreakdown[session.language] || 0) + 1
@@ -192,6 +198,7 @@ export class ProgressTracker {
       improvementRate: Math.round(improvementRate),
       strongestPhonemes,
       weakestPhonemes,
+      recentPoorPhonemes,
       phonemeAccuracy,
       languageBreakdown,
       recentTrend,
@@ -259,14 +266,21 @@ export class ProgressTracker {
       
       // Add weak phonemes
       session.weakPhonemes.forEach(phoneme => sessionPhonemes.add(phoneme));
+      
+      // Add phonemes from phonemeScores (actual phoneme data)
+      if (session.phonemeScores) {
+        Object.keys(session.phonemeScores).forEach(phoneme => sessionPhonemes.add(phoneme));
+      }
 
       // Update phoneme history
       sessionPhonemes.forEach(phoneme => {
         if (!phonemeHistory[phoneme]) {
           phonemeHistory[phoneme] = [];
         }
-        // Use overall score as proxy for phoneme accuracy
-        phonemeHistory[phoneme].push(session.overallScore);
+        // Use actual phoneme score if available, otherwise use overall score as fallback
+        const phonemeScore = session.phonemeScores?.[phoneme] || session.overallScore;
+        console.log(`Session ${index + 1}: Phoneme ${phoneme} = ${phonemeScore} (from ${session.phonemeScores?.[phoneme] ? 'phonemeScores' : 'overallScore'})`);
+        phonemeHistory[phoneme].push(phonemeScore);
       });
 
       // Calculate mastery levels for this session
@@ -279,13 +293,23 @@ export class ProgressTracker {
           const latestScore = scores[scores.length - 1];
           const avgScore = scores.reduce((a, b) => a + b, 0) / scores.length;
           
-          // More realistic thresholds
-          if (latestScore >= 90 && avgScore >= 85) {
+          // Debug logging
+          console.log(`Phoneme ${phoneme}: latest=${latestScore}, avg=${avgScore.toFixed(1)}`);
+          
+          // Prioritize latest score - if latest is very poor, it needs work regardless of average
+          if (latestScore >= 80 && avgScore >= 75) {
             masteredCount++;
-          } else if (latestScore >= 75 || avgScore >= 70) {
+            console.log(`  -> Mastered`);
+          } else if (latestScore < 50) {
+            // If latest score is very poor (<50), it needs work regardless of average
+            needsWorkCount++;
+            console.log(`  -> Needs Work (poor latest score)`);
+          } else if (latestScore >= 60 && avgScore >= 55) {
             improvingCount++;
+            console.log(`  -> Improving`);
           } else {
             needsWorkCount++;
+            console.log(`  -> Needs Work`);
           }
         }
       });
@@ -316,6 +340,40 @@ export class ProgressTracker {
       score: session.overallScore,
       date: session.timestamp.toISOString().split("T")[0],
     }))
+  }
+
+  getRecentPoorPhonemes(limit = 5): Array<{ phoneme: string; accuracy: number; sessionDate: Date }> {
+    const recentSessions = this.sessions
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+      .slice(0, limit);
+
+    const poorPhonemes: Array<{ phoneme: string; accuracy: number; sessionDate: Date }> = [];
+
+    recentSessions.forEach(session => {
+      if (session.phonemeScores) {
+        Object.entries(session.phonemeScores).forEach(([phoneme, accuracy]) => {
+          if (accuracy < 60) {
+            poorPhonemes.push({
+              phoneme,
+              accuracy,
+              sessionDate: session.timestamp
+            });
+          }
+        });
+      }
+    });
+
+    // Remove duplicates and sort by accuracy (lowest first)
+    const uniquePhonemes = new Map();
+    poorPhonemes.forEach(p => {
+      if (!uniquePhonemes.has(p.phoneme) || uniquePhonemes.get(p.phoneme).accuracy > p.accuracy) {
+        uniquePhonemes.set(p.phoneme, p);
+      }
+    });
+
+    return Array.from(uniquePhonemes.values())
+      .sort((a, b) => a.accuracy - b.accuracy)
+      .slice(0, 10); // Return top 10 worst phonemes
   }
 
   getScoreHistoryByTimeRange(range: 'lifetime' | '30days' | '30sessions' | '10sessions'): Array<{ session: number; score: number; date: string }> {

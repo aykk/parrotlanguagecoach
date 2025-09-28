@@ -194,6 +194,7 @@ export function ProgressDashboard() {
       const newSessions = progressTracker.getRecentSessions(10)
       const newHistory = progressTracker.getScoreHistoryByTimeRange(scoreRange)
       const newPhonemeMastery = progressTracker.getPhonemeMasteryProgress(30)
+      console.log('Phoneme Mastery Data:', newPhonemeMastery)
 
       setStats(newStats)
       setRecentSessions(newSessions)
@@ -503,34 +504,29 @@ export function ProgressDashboard() {
               </div>
               <div>
                 <div className="space-y-2">
-                  {Object.entries(stats.phonemeAccuracy)
-                    .filter(([_, accuracy]) => accuracy < 60)
-                    .length > 0 ? (
-                    Object.entries(stats.phonemeAccuracy)
-                      .filter(([_, accuracy]) => accuracy < 60)
-                      .sort(([, a], [, b]) => a - b)
-                      .map(([phoneme, accuracy], index) => {
-                        const symbol = toIPA(phoneme) ?? phoneme;
-                        const tip = PHONEME_TIPS[symbol] || `Pronounce as ${phoneme}`;
-                        return (
-                          <div
-                            key={index}
-                            className="flex items-center justify-between p-2 rounded border"
+                  {stats.recentPoorPhonemes.length > 0 ? (
+                    stats.recentPoorPhonemes.map((item, index) => {
+                      const symbol = toIPA(item.phoneme) ?? item.phoneme;
+                      const tip = PHONEME_TIPS[symbol] || `Pronounce as ${item.phoneme}`;
+                      return (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between p-2 rounded border"
+                        >
+                          <span 
+                            className="font-mono text-lg tooltip-trigger cursor-help"
+                            data-tooltip={`${item.phoneme} → ${symbol}\n\n${tip}\n\nFrom session: ${item.sessionDate.toLocaleDateString()}`}
                           >
-                            <span 
-                              className="font-mono text-lg tooltip-trigger cursor-help"
-                              data-tooltip={`${phoneme} → ${symbol}\n\n${tip}`}
-                            >
-                              /{phoneme}/
-                            </span>
-                            <Badge variant="destructive">
-                              {accuracy}%
-                            </Badge>
-                          </div>
-                        );
-                      })
+                            /{item.phoneme}/
+                          </span>
+                          <Badge variant="destructive">
+                            {item.accuracy.toFixed(1)}%
+                          </Badge>
+                        </div>
+                      );
+                    })
                   ) : (
-                    <p className="text-muted-foreground text-sm">Great job! All your phonemes are performing well.</p>
+                    <p className="text-muted-foreground text-sm">Great job! No phonemes scored below 60% in recent sessions.</p>
                   )}
                 </div>
               </div>
