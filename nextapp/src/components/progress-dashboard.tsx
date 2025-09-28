@@ -274,7 +274,7 @@ export function ProgressDashboard() {
     <div className="space-y-6">
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="rounded-xl p-6 border-2 border-white/40 bg-white/70 backdrop-blur-md shadow-xl">
+        <div className="rounded-xl p-6 border-2 border-blue-200/30 bg-gradient-to-br from-blue-50/20 to-cyan-50/20 backdrop-blur-md shadow-xl">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Total Sessions</p>
@@ -284,7 +284,7 @@ export function ProgressDashboard() {
             </div>
           </div>
 
-        <div className="rounded-xl p-6 border-2 border-white/40 bg-white/70 backdrop-blur-md shadow-xl">
+        <div className="rounded-xl p-6 border-2 border-green-200/30 bg-gradient-to-br from-green-50/20 to-emerald-50/20 backdrop-blur-md shadow-xl">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Average Score</p>
@@ -294,7 +294,7 @@ export function ProgressDashboard() {
             </div>
           </div>
 
-        <div className="rounded-xl p-6 border-2 border-white/40 bg-white/70 backdrop-blur-md shadow-xl">
+        <div className="rounded-xl p-6 border-2 border-red-200/30 bg-gradient-to-br from-red-50/20 to-orange-50/20 backdrop-blur-md shadow-xl">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Improvement</p>
@@ -307,7 +307,7 @@ export function ProgressDashboard() {
             </div>
           </div>
 
-        <div className="rounded-xl p-6 border-2 border-white/40 bg-white/70 backdrop-blur-md shadow-xl">
+        <div className="rounded-xl p-6 border-2 border-orange-200/30 bg-gradient-to-br from-orange-50/20 to-yellow-50/20 backdrop-blur-md shadow-xl">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Streak</p>
@@ -327,7 +327,7 @@ export function ProgressDashboard() {
         </TabsList>
 
         <TabsContent value="progress" className="space-y-4">
-          <div className="rounded-xl p-6 border-2 border-white/40 bg-white/70 backdrop-blur-md shadow-xl">
+          <div className="rounded-xl p-6 border-2 border-yellow-200/30 bg-gradient-to-br from-yellow-50/20 to-orange-50/20 backdrop-blur-md shadow-xl">
             <div className="mb-4">
               <h3 className="text-lg font-semibold">Phoneme Mastery Progress</h3>
               <p className="text-sm text-muted-foreground">Track how your phonemes improve from "Needs Work" to "Improving" to "Mastered" over time!</p>
@@ -350,7 +350,7 @@ export function ProgressDashboard() {
             </div>
           </div>
 
-          <div className="rounded-xl p-6 border-2 border-white/40 bg-white/70 backdrop-blur-md shadow-xl">
+          <div className="rounded-xl p-6 border-2 border-yellow-200/30 bg-gradient-to-br from-yellow-50/20 to-orange-50/20 backdrop-blur-md shadow-xl">
             <div className="mb-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -400,7 +400,7 @@ export function ProgressDashboard() {
 
         <TabsContent value="phonemes" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="rounded-xl p-6 border-2 border-white/40 bg-white/70 backdrop-blur-md shadow-xl">
+            <div className="rounded-xl p-6 border-2 border-yellow-200/30 bg-gradient-to-br from-yellow-50/20 to-orange-50/20 backdrop-blur-md shadow-xl">
               <div className="mb-4">
                 <h3 className="text-lg font-semibold">Strongest Phonemes</h3>
                 <p className="text-sm text-muted-foreground">Sounds with highest accuracy</p>
@@ -429,7 +429,7 @@ export function ProgressDashboard() {
               </div>
             </div>
 
-            <div className="rounded-xl p-6 border-2 border-white/40 bg-white/70 backdrop-blur-md shadow-xl">
+            <div className="rounded-xl p-6 border-2 border-yellow-200/30 bg-gradient-to-br from-yellow-50/20 to-orange-50/20 backdrop-blur-md shadow-xl">
               <div className="mb-4">
                 <h3 className="text-lg font-semibold">Phonemes to Practice</h3>
                 <p className="text-sm text-muted-foreground">Sounds under 60% accuracy</p>
@@ -463,7 +463,7 @@ export function ProgressDashboard() {
         </TabsContent>
 
         <TabsContent value="languages" className="space-y-4">
-          <div className="rounded-xl p-6 border-2 border-white/40 bg-white/70 backdrop-blur-md shadow-xl">
+          <div className="rounded-xl p-6 border-2 border-yellow-200/30 bg-gradient-to-br from-yellow-50/20 to-orange-50/20 backdrop-blur-md shadow-xl">
             <div className="mb-4">
               <h3 className="text-lg font-semibold">Language Practice Distribution</h3>
               <p className="text-sm text-muted-foreground">How much time you've spent on each language</p>
@@ -506,7 +506,7 @@ export function ProgressDashboard() {
         </TabsContent>
 
         <TabsContent value="sessions" className="space-y-4">
-          <div className="rounded-xl p-6 border-2 border-white/40 bg-white/70 backdrop-blur-md shadow-xl">
+          <div className="rounded-xl p-6 border-2 border-yellow-200/30 bg-gradient-to-br from-yellow-50/20 to-orange-50/20 backdrop-blur-md shadow-xl">
             <div className="mb-4">
               <div className="flex items-center justify-between">
                 <div>

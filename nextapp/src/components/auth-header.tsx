@@ -96,7 +96,7 @@ export const AuthHeader = () => {
 
   return (
     <div className="flex items-center gap-2">
-      <Button asChild className="bg-white/85 text-black hover:bg-white/80 border-white transition-all duration-300 font-medium flex items-center gap-2">
+      <Button asChild className="bg-white/85 text-black hover:bg-white/80 border-green-300/50 hover:border-green-400/50 transition-all duration-300 font-medium flex items-center gap-2">
         <Link href="/signin">
           <EnterIcon className="w-4 h-4" />
           Sign in

@@ -883,39 +883,47 @@ export default function AzureSpeechTest() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="mb-8 flex justify-between items-center"
+          transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+          className="max-w-4xl mx-auto"
         >
+          {/* Main Container with Header and Content */}
+          <div className="bg-white/70 backdrop-blur-md rounded-2xl p-6 border-2 border-white/40 shadow-xl space-y-6">
+            {/* Navigation Buttons */}
+            <div className="flex justify-between items-center mb-4">
           <Button 
             onClick={() => router.push("/")}
             variant="outline"
-            className="flex items-center gap-2 bg-white/70 hover:bg-white/75 border-white/20 text-gray-800"
+                className="flex items-center gap-2 bg-white/70 hover:bg-white/75 border-red-300/50 text-gray-800 hover:border-red-400/50 transition-colors"
           >
             <ArrowLeftIcon className="size-4" />
             Back to Home
           </Button>
-          <AuthHeader />
-        </motion.div>
+              <AuthHeader />
+            </div>
+            {/* Header with Logo */}
+            <div className="flex items-center justify-center mb-4 -mt-24">
+              <Image
+                src="/blacklogo.png"
+                alt="Parrot Language Coach"
+                width={400}
+                height={200}
+                className="object-contain"
+              />
+            </div>
+            
+            <Tabs defaultValue="practice" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 bg-white/70 backdrop-blur-md border-white/20">
+                <TabsTrigger value="practice" className="data-[state=active]:bg-red-400 data-[state=active]:text-white">Practice</TabsTrigger>
+                <TabsTrigger value="dashboard" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white">Dashboard</TabsTrigger>
+              </TabsList>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-          className="max-w-4xl mx-auto space-y-6"
-        >
-          <Tabs defaultValue="practice" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 bg-white/70 backdrop-blur-md border-white/20">
-              <TabsTrigger value="practice" className="data-[state=active]:bg-green-700 data-[state=active]:text-white">Practice</TabsTrigger>
-              <TabsTrigger value="dashboard" className="data-[state=active]:bg-green-700 data-[state=active]:text-white">Dashboard</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="practice" className="bg-white/70 backdrop-blur-md rounded-2xl p-6 border-2 border-white/40 shadow-xl space-y-6">
+            <TabsContent value="practice" className="space-y-6">
               {/* Language Selector */}
-              <div className="rounded-xl p-4 border-2 border-white/40 bg-white/70 backdrop-blur-md shadow-xl">
+              <div className="rounded-xl p-4 border-2 border-red-200/30 bg-gradient-to-br from-red-50/20 to-orange-50/20 backdrop-blur-md shadow-xl">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold text-gray-800">Language:</h3>
                   <select
-                    className="w-48 rounded-lg border border-white/20 bg-white/70 backdrop-blur-md px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-48 rounded-lg border-2 border-gray-300 bg-white/90 backdrop-blur-md px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 hover:border-red-300 transition-colors"
                     value={lang}
                     onChange={(e) => setLang(e.target.value as Lang)}
                   >
@@ -931,7 +939,7 @@ export default function AzureSpeechTest() {
               {/* Main Practice Area - Side by Side Layout */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Left Side: Reference Sentence */}
-                <div className="rounded-xl p-6 border-2 border-white/40 bg-white/70 backdrop-blur-md shadow-xl">
+                <div className="rounded-xl p-6 border-2 border-red-200/30 bg-gradient-to-br from-red-50/20 to-orange-50/20 backdrop-blur-md shadow-xl">
                   <h3 className="text-lg font-semibold text-gray-800 mb-4">Read this sentence out loud!</h3>
                   <div className="bg-white/50 rounded-xl p-4 border-2 border-gray-200 mb-4">
                     <textarea
@@ -978,13 +986,13 @@ export default function AzureSpeechTest() {
                 </div>
 
                 {/* Right Side: Video Feed */}
-                <div className="rounded-xl p-6 border-2 border-white/40 bg-white/70 backdrop-blur-md shadow-xl">
+                <div className="rounded-xl p-6 border-2 border-green-200/30 bg-gradient-to-br from-green-50/20 to-emerald-50/20 backdrop-blur-md shadow-xl">
                   <LipReader ref={lipReaderRef} />
                 </div>
               </div>
 
               {/* Recording Controls - Compact Layout */}
-              <div className="rounded-xl p-6 border-2 border-white/40 bg-white/70 backdrop-blur-md shadow-xl">
+              <div className="rounded-xl p-6 border-2 border-blue-200/30 bg-gradient-to-br from-blue-50/20 to-cyan-50/20 backdrop-blur-md shadow-xl">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {/* Volume Bar */}
                   <div className="flex flex-col justify-center">
@@ -994,7 +1002,7 @@ export default function AzureSpeechTest() {
                       </svg>
                       Volume
                     </div>
-                    <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden">
+                    <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden border-2 border-gray-300">
                       <div 
                         id="volume-bar"
                         className="h-full bg-green-500 transition-all duration-100 ease-out"
@@ -1409,10 +1417,11 @@ export default function AzureSpeechTest() {
 
             </TabsContent>
 
-            <TabsContent value="dashboard" className="bg-white/70 backdrop-blur-md rounded-2xl p-6 border-2 border-white/40 shadow-xl space-y-6">
+            <TabsContent value="dashboard" className="space-y-6">
               <ProgressDashboard />
             </TabsContent>
           </Tabs>
+          </div>
         </motion.div>
       </div>
       )}

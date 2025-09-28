@@ -26,8 +26,8 @@ const isV0 = process.env["VERCEL_URL"]?.includes("vusercontent.net") ?? false
 
 export const metadata: Metadata = {
   title: {
-    template: "%s | parrot: AI Pronunciation Coach",
-    default: "parrot: AI Pronunciation Coach",
+    template: "%s | Parrot: AI Phonetics Coach",
+    default: "Parrot: AI Phonetics Coach",
   },
   description:
     "We stand at the forefront of a new era, where creativity meets technology to redefine what's possible. Our mission is to empower individuals and businesses alike with groundbreaking solutions that inspire change and drive progress.",
