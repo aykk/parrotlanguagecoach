@@ -605,46 +605,52 @@ export default function AzureSpeechTest() {
             </TabsList>
 
             <TabsContent value="practice" className="space-y-6">
-              {/* Language + Reference sentence */}
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <label className="block">
-                      <span className="text-sm font-medium">Language</span>
-                      <select
-                        className="mt-1 w-full rounded-lg border px-3 py-2"
-                        value={lang}
-                        onChange={(e) => setLang(e.target.value as Lang)}
-                      >
-                        {LANGUAGE_OPTIONS.map((option) => (
-                          <option key={option.code} value={option.code}>
-                            {option.flag} {option.name} ({option.code})
-                          </option>
-                        ))}
-                      </select>
-                    </label>
+                  {/* Language + Reference sentence */}
+                  <div className="space-y-6">
+                    <div className="flex justify-center">
+                      <label className="block w-full max-w-xs">
+                        <span className="text-sm font-medium">Language</span>
+                        <select
+                          className="mt-2 w-full rounded-lg border px-4 py-3 text-center font-medium focus:outline-none"
+                          value={lang}
+                          onChange={(e) => setLang(e.target.value as Lang)}
+                        >
+                          {LANGUAGE_OPTIONS.map((option) => (
+                            <option key={option.code} value={option.code}>
+                              {option.flag} {option.name} ({option.code})
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
 
-                <label className="block">
-                  <span className="text-sm font-medium">Reference sentence</span>
-                  <textarea
-                    id="ref-input"
-                    className="mt-1 w-full rounded-lg border px-3 py-2 min-h-[60px] resize-none"
-                    defaultValue={refText.current}
-                    onChange={(e) => {
-                      refText.current = e.target.value;
-                      setIsAIGenerated(false);
-                      // Auto-resize textarea
-                      e.target.style.height = 'auto';
-                      e.target.style.height = Math.max(60, e.target.scrollHeight) + 'px';
-                    }}
-                    placeholder={SAMPLE_BY_LANG[lang]}
-                    rows={2}
-                  />
-                </label>
-              </div>
+                    <div className="rounded-lg p-6 border">
+                      <label className="block">
+                        <span className="text-lg font-semibold mb-3 block text-center">Reference Sentence</span>
+                        <textarea
+                          id="ref-input"
+                          className="w-full rounded-lg border px-6 py-4 min-h-[80px] resize-none text-lg font-medium text-center focus:outline-none"
+                          defaultValue={refText.current}
+                          onChange={(e) => {
+                            refText.current = e.target.value;
+                            setIsAIGenerated(false);
+                            // Auto-resize textarea
+                            e.target.style.height = 'auto';
+                            e.target.style.height = Math.max(80, e.target.scrollHeight) + 'px';
+                          }}
+                          placeholder={SAMPLE_BY_LANG[lang]}
+                          rows={2}
+                        />
+                      </label>
+                    </div>
+                  </div>
 
               {/* AI Generation */}
-              <div className="rounded-xl border p-4 space-y-4">
-                <div className="font-semibold">Generate a sentence for me!</div>
-                <div className="space-y-3">
+              <div className="rounded-lg p-6 border">
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold">Generate a sentence for me!</h3>
+                </div>
+                <div className="space-y-4">
                   <div>
                     <label className="text-sm font-medium">Complexity Level: {complexity}/10</label>
                     <Slider
@@ -653,9 +659,9 @@ export default function AzureSpeechTest() {
                       max={10}
                       min={1}
                       step={1}
-                      className="mt-2"
+                      className="mt-3"
                     />
-                    <div className="flex justify-between text-xs text-gray-500 mt-1">
+                    <div className="flex justify-between text-xs mt-2">
                       <span>Beginner</span>
                       <span>Advanced</span>
                     </div>
@@ -663,44 +669,78 @@ export default function AzureSpeechTest() {
                   <button
                     onClick={generateAISentence}
                     disabled={isGenerating}
-                    className="rounded-lg border px-4 py-2 text-sm hover:bg-gray-50 disabled:opacity-50"
+                    className="w-full rounded-lg border px-6 py-3 font-medium hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
-                    {isGenerating ? "Generating..." : "Generate"}
+                    {isGenerating ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                        Generating...
+                      </>
+                    ) : (
+                      "Generate Sentence"
+                    )}
                   </button>
                   {isAIGenerated && (
-                    <div className="text-sm text-green-600">
-                      ✓ AI-generated sentence loaded
+                    <div className="flex items-center gap-2 text-sm px-3 py-2 rounded-lg border">
+                      <span>✓</span>
+                      AI-generated sentence loaded
                     </div>
                   )}
                 </div>
               </div>
 
               {/* Controls */}
-              <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex items-center justify-center gap-4 flex-wrap">
                 <button
                   onClick={runAssessment}
                   disabled={!ready || loading}
-                  className="rounded-2xl px-4 py-2 shadow font-medium border hover:shadow-md disabled:opacity-50"
+                  className="rounded-lg px-8 py-4 font-semibold border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
-                  {loading ? "Listening…" : "Record & Assess"}
+                  {loading ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                      Listening…
+                    </>
+                  ) : (
+                    "Record & Assess"
+                  )}
                 </button>
                 {isListening && (
                   <button
                     onClick={stopListening}
-                    className="rounded-2xl px-4 py-2 shadow font-medium border border-red-500 text-red-600 hover:bg-red-50"
+                    className="rounded-lg px-6 py-4 font-semibold border hover:bg-gray-50 flex items-center gap-2"
                   >
                     Stop Listening
                   </button>
                 )}
               </div>
 
-              <div className="text-sm text-gray-600">Status: {status}</div>
+              <div className="text-center">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border">
+                  <div className="w-2 h-2 rounded-full animate-pulse"></div>
+                  Status: {status}
+                </div>
+              </div>
 
               {/* Playback */}
-              <div className="rounded-xl border p-4 space-y-2">
-                <div className="font-semibold">Playback</div>
-                <div className="text-sm text-gray-600">
-                  {isRecording ? "Recording…" : audioUrl ? "Recorded clip ready." : "No recording yet."}
+              <div className="rounded-lg p-6 border">
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold">Audio Playback</h3>
+                </div>
+                <div className="text-sm mb-4">
+                  {isRecording ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full animate-pulse"></div>
+                      Recording…
+                    </div>
+                  ) : audioUrl ? (
+                    <div className="flex items-center gap-2">
+                      <span>✓</span>
+                      Recorded clip ready
+                    </div>
+                  ) : (
+                    <div>No recording yet</div>
+                  )}
                 </div>
                 <div className="flex items-center gap-3">
                   <button
@@ -708,15 +748,24 @@ export default function AzureSpeechTest() {
                       stopRecording();
                       if (audioUrl) new Audio(audioUrl).play();
                     }}
-                    className="rounded-xl px-3 py-1 border text-sm"
+                    className="rounded-lg px-4 py-2 border font-medium hover:bg-gray-50 flex items-center gap-2"
+                    disabled={!audioUrl}
                   >
-                    Play latest
+                    Play Latest
                   </button>
-                  <button onClick={resetRecording} className="rounded-xl px-3 py-1 border text-sm">
-                    Clear recording
+                  <button 
+                    onClick={resetRecording} 
+                    className="rounded-lg px-4 py-2 border font-medium hover:bg-gray-50 flex items-center gap-2"
+                    disabled={!audioUrl}
+                  >
+                    Clear Recording
                   </button>
                 </div>
-                {audioUrl && <audio className="w-full mt-2" controls src={audioUrl} />}
+                {audioUrl && (
+                  <div className="mt-4">
+                    <audio className="w-full" controls src={audioUrl} />
+                  </div>
+                )}
               </div>
 
               {/* Score cards WITH hover briefs */}
@@ -791,7 +840,7 @@ export default function AzureSpeechTest() {
                           </div>
                         </div>
                       )}
-                      <div className="space-y-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {words.map((w, i) => {
                           const wAcc = w?.PronunciationAssessment?.AccuracyScore;
                           const err = w?.PronunciationAssessment?.ErrorType;
@@ -799,76 +848,81 @@ export default function AzureSpeechTest() {
 
                           // Color coding based on accuracy score
                           const getScoreColor = (score: number) => {
-                            if (score >= 90) return "text-green-600 border-green-500";
-                            if (score >= 80) return "text-yellow-600 border-yellow-500";
-                            if (score >= 70) return "text-orange-600 border-orange-500";
-                            return "text-red-600 border-red-500";
+                            if (score >= 90) return "border-green-500";
+                            if (score >= 80) return "border-yellow-500";
+                            if (score >= 70) return "border-orange-500";
+                            return "border-red-500";
                           };
 
                           return (
-                            <div key={i} className={`border rounded-lg p-3 ${low ? "border-amber-400" : ""}`}>
-                              <div className="font-medium flex flex-wrap items-center gap-2">
-                                <span>{w.Word}</span>
-                                <button
-                                  onClick={() => speakWord(w.Word)}
-                                  className="p-1 hover:bg-gray-100 rounded transition-colors"
-                                  title="Listen to pronunciation"
-                                >
-                                  <Volume2 className="w-3 h-3 text-gray-500 hover:text-gray-700" />
-                                </button>
+                            <div key={i} className={`border-2 rounded-lg p-4 ${low ? "border-amber-400" : "border-gray-200"}`}>
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-semibold text-lg">{w.Word}</span>
+                                  <button
+                                    onClick={() => speakWord(w.Word)}
+                                    className="p-2 hover:bg-gray-100 rounded-lg"
+                                    title="Listen to pronunciation"
+                                  >
+                                    <Volume2 className="w-4 h-4" />
+                                  </button>
+                                </div>
                                 {typeof wAcc === "number" && (
-                                  <span className={`text-xs px-2 py-1 rounded border-2 ${getScoreColor(wAcc)}`}>
+                                  <span className={`text-sm px-3 py-1 rounded-lg border-2 font-semibold ${getScoreColor(wAcc)}`}>
                                     {wAcc.toFixed(1)}%
                                   </span>
                                 )}
-                                {err && err !== "None" && (
-                                  <span className="text-xs text-red-500">{err}</span>
-                                )}
                               </div>
+                              {err && err !== "None" && (
+                                <div className="text-xs px-2 py-1 rounded mb-2 border">
+                                  {err}
+                                </div>
+                              )}
 
                               {/* Show phonemes only for English */}
                               {lang === "en-US" && w.Phonemes?.length ? (
-                                <div className="mt-1 text-sm">
-                                      {w.Phonemes.map((p, j) => {
-                                        const pAcc = p?.PronunciationAssessment?.AccuracyScore ?? 100;
-                                        const symbol = toIPA(p.Phoneme) ?? p.Phoneme;
-                                        const bad = pAcc < LOW_PHONE;
-                                        const tip = PHONEME_TIPS[symbol] || `Pronounce as ${p.Phoneme}`;
-                                        return (
-                                          <span
-                                            key={j}
-                                            className={`inline-block mr-2 ${bad ? "bg-red-50 text-red-700 rounded px-1" : ""}`}
-                                            title={`Accuracy: ${pAcc.toFixed(1)}%\n\n${tip}`}
-                                          >
-                                            /{symbol}/
-                                            <span className="text-xs text-gray-500"> {pAcc.toFixed(1)}</span>
-                                          </span>
-                                        );
-                                      })}
+                                <div className="mt-3">
+                                  <div className="text-xs font-medium text-gray-600 mb-2">Phonemes:</div>
+                                  <div className="flex flex-wrap gap-1">
+                                    {w.Phonemes.map((p, j) => {
+                                      const pAcc = p?.PronunciationAssessment?.AccuracyScore ?? 100;
+                                      const symbol = toIPA(p.Phoneme) ?? p.Phoneme;
+                                      const bad = pAcc < LOW_PHONE;
+                                      const tip = PHONEME_TIPS[symbol] || `Pronounce as ${p.Phoneme}`;
+                                      return (
+                                        <span
+                                          key={j}
+                                          className={`inline-block px-2 py-1 text-xs rounded-lg border ${bad ? "border-red-300" : "border-gray-300"}`}
+                                          title={`Accuracy: ${pAcc.toFixed(1)}%\n\n${tip}`}
+                                        >
+                                          /{symbol}/
+                                          <span className="ml-1">({pAcc.toFixed(0)})</span>
+                                        </span>
+                                      );
+                                    })}
+                                  </div>
                                 </div>
                               ) : lang === "en-US" && w.Syllables?.length ? (
-                                <div className="mt-1 text-sm text-gray-500">No phoneme stream; showing syllables below.</div>
+                                <div className="mt-3 text-sm text-gray-500">No phoneme stream available</div>
                               ) : lang === "en-US" ? (
-                                <div className="text-sm text-gray-500 mt-1">No phoneme data.</div>
+                                <div className="mt-3 text-sm text-gray-500">No phoneme data available</div>
                               ) : null}
 
                               {/* Target syllable chunks (comparison) - only for English */}
                               {lang === "en-US" && w.Syllables?.length ? (
-                                <div className="mt-2 text-sm">
-                                  <div className="text-xs uppercase tracking-wide text-gray-500 mb-1">
-                                    Target syllable chunks
-                                  </div>
-                                  <div>
+                                <div className="mt-3">
+                                  <div className="text-xs font-medium text-gray-600 mb-2">Target syllables:</div>
+                                  <div className="text-sm">
                                     {w.Syllables.map((syl, k) => {
                                       const chunks: string[] =
                                         syl.Syllable.match(/dh|ch|jh|sh|zh|th|ng|rr|[a-z]+/gi) ?? [syl.Syllable];
                                       return (
-                                        <span key={k} className="inline-block mr-3">
-                                          <span className="underline">{syl.Grapheme ?? w.Word}</span>{" "}
-                                      {chunks.map((ph, m) => {
-                                        const symbol = toIPA(ph) ?? ph;
-                                        return <span key={m} className="inline-block mr-1">/{symbol}/</span>;
-                                      })}
+                                        <span key={k} className="inline-block mr-2">
+                                          <span className="font-medium">{syl.Grapheme ?? w.Word}</span>{" "}
+                                          {chunks.map((ph, m) => {
+                                            const symbol = toIPA(ph) ?? ph;
+                                            return <span key={m} className="text-gray-500">/{symbol}/</span>;
+                                          })}
                                         </span>
                                       );
                                     })}

@@ -19,6 +19,7 @@ export interface ProgressStats {
   improvementRate: number
   strongestPhonemes: string[]
   weakestPhonemes: string[]
+  phonemeAccuracy: { [phoneme: string]: number } // Average accuracy for each phoneme
   languageBreakdown: { [key: string]: number }
   recentTrend: "improving" | "stable" | "declining"
   streakDays: number
@@ -95,6 +96,7 @@ export class ProgressTracker {
         improvementRate: 0,
         strongestPhonemes: [],
         weakestPhonemes: [],
+        phonemeAccuracy: {},
         languageBreakdown: {},
         recentTrend: "stable",
         streakDays: 0,
@@ -141,6 +143,12 @@ export class ProgressTracker {
       .filter((p) => p.frequency >= 2)
       .sort((a, b) => b.avgScore - a.avgScore)
 
+    // Create phoneme accuracy mapping
+    const phonemeAccuracy: { [phoneme: string]: number } = {}
+    phonemeStats.forEach((p) => {
+      phonemeAccuracy[p.phoneme] = Math.round(p.avgScore)
+    })
+
     const strongestPhonemes = phonemeStats
       .filter((p) => p.avgScore >= averageScore)
       .slice(0, 5)
@@ -170,6 +178,7 @@ export class ProgressTracker {
       improvementRate: Math.round(improvementRate),
       strongestPhonemes,
       weakestPhonemes,
+      phonemeAccuracy,
       languageBreakdown,
       recentTrend,
       streakDays,

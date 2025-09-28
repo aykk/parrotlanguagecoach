@@ -306,26 +306,26 @@ export function ProgressDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card>
               <CardHeader>
-                <CardTitle className="text-green-600">Strongest Phonemes</CardTitle>
-                <CardDescription>Sounds you've mastered</CardDescription>
+                <CardTitle>Strongest Phonemes</CardTitle>
+                <CardDescription>Sounds with highest accuracy</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
                   {stats.strongestPhonemes.length > 0 ? (
-                    stats.strongestPhonemes.map((phoneme, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-2 rounded bg-green-50 dark:bg-green-950"
-                      >
-                        <span className="font-mono text-lg">/{phoneme}/</span>
-                        <Badge
-                          variant="secondary"
-                          className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                    stats.strongestPhonemes.map((phoneme, index) => {
+                      const accuracy = stats.phonemeAccuracy[phoneme] || 0;
+                      return (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between p-2 rounded border"
                         >
-                          Mastered
-                        </Badge>
-                      </div>
-                    ))
+                          <span className="font-mono text-lg">/{phoneme}/</span>
+                          <Badge variant="secondary">
+                            {accuracy}%
+                          </Badge>
+                        </div>
+                      );
+                    })
                   ) : (
                     <p className="text-muted-foreground text-sm">Keep practicing to see your strengths!</p>
                   )}
@@ -335,23 +335,30 @@ export function ProgressDashboard() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-red-600">Phonemes to Practice</CardTitle>
-                <CardDescription>Sounds that need more work</CardDescription>
+                <CardTitle>Phonemes to Practice</CardTitle>
+                <CardDescription>Sounds under 60% accuracy</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {stats.weakestPhonemes.length > 0 ? (
-                    stats.weakestPhonemes.map((phoneme, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-2 rounded bg-red-50 dark:bg-red-950"
-                      >
-                        <span className="font-mono text-lg">/{phoneme}/</span>
-                        <Badge variant="destructive">Practice Needed</Badge>
-                      </div>
-                    ))
+                  {Object.entries(stats.phonemeAccuracy)
+                    .filter(([_, accuracy]) => accuracy < 60)
+                    .length > 0 ? (
+                    Object.entries(stats.phonemeAccuracy)
+                      .filter(([_, accuracy]) => accuracy < 60)
+                      .sort(([, a], [, b]) => a - b)
+                      .map(([phoneme, accuracy], index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between p-2 rounded border"
+                        >
+                          <span className="font-mono text-lg">/{phoneme}/</span>
+                          <Badge variant="destructive">
+                            {accuracy}%
+                          </Badge>
+                        </div>
+                      ))
                   ) : (
-                    <p className="text-muted-foreground text-sm">Great job! No weak phonemes identified.</p>
+                    <p className="text-muted-foreground text-sm">Great job! All your phonemes are performing well.</p>
                   )}
                 </div>
               </CardContent>
