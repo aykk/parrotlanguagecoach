@@ -134,6 +134,15 @@ export default function AzureSpeechTest() {
   const [generatingPractice, setGeneratingPractice] = useState<string | null>(null);
   const [processingRecording, setProcessingRecording] = useState(false);
   const [loadingDots, setLoadingDots] = useState(".");
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+
+  // Initial loading screen (2 seconds on first load/refresh)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsInitialLoad(false);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Phoneme pronunciation mapping (how to pronounce each phoneme)
   const PHONEME_PRONUNCIATION: { [key: string]: string } = {
@@ -170,7 +179,7 @@ export default function AzureSpeechTest() {
 
   // Loading dots animation
   useEffect(() => {
-    if (loading && !isListening) {
+    if ((loading && !isListening) || isInitialLoad) {
       const interval = setInterval(() => {
         setLoadingDots(prev => {
           if (prev === ".") return "..";
@@ -180,7 +189,7 @@ export default function AzureSpeechTest() {
       }, 500);
       return () => clearInterval(interval);
     }
-  }, [loading, isListening]);
+  }, [loading, isListening, isInitialLoad]);
 
   // ARPAbet/SAPI -> IPA (best effort)
   const PHONEME_MAP: Record<string, string> = {
@@ -717,8 +726,8 @@ export default function AzureSpeechTest() {
       </div>
 
       
-      {/* Full-page loading overlay */}
-      {loading && !isListening && (
+      {/* Initial loading screen (2 seconds) */}
+      {isInitialLoad && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white">
           <Image
             src="/parrot.gif"
@@ -733,8 +742,9 @@ export default function AzureSpeechTest() {
         </div>
       )}
 
-      {/* Main content */}
-      <div className="relative z-10 container mx-auto px-4 py-8">
+      {/* Main content - only show after initial load */}
+      {!isInitialLoad && (
+        <div className="relative z-10 container mx-auto px-4 py-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1211,7 +1221,7 @@ export default function AzureSpeechTest() {
                         </div>
                       </div>
                     )}
-                  </div>
+        </div>
 
             </TabsContent>
 
@@ -1220,7 +1230,8 @@ export default function AzureSpeechTest() {
             </TabsContent>
           </Tabs>
         </motion.div>
-      </div>
+        </div>
+      )}
     </main>
   );
 }
