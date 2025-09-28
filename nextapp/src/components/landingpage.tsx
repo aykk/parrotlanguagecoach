@@ -121,18 +121,19 @@ export const LandingPage = () => {
         <motion.div
           layout="position"
           className="relative -top-34"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ y: 20 }}
+          animate={{ y: 0 }}
           transition={{ duration: 0.8, delay: 0.6, ease: "easeOut" }}
         >
           <div className="flex gap-6 items-center">
             <Button 
               onClick={() => router.push("/practice")}
-              className="px-10 py-3 bg-white/15 hover:bg-white/25 text-white border-white/40 hover:border-white/60 backdrop-blur-md transition-all duration-300 font-medium text-base opacity-100"
+              className="px-10 py-3 text-white border-white/40 hover:border-white/60 backdrop-blur-md transition-all duration-300 font-medium text-base"
               style={{ 
                 background: 'rgba(255, 255, 255, 0.15)',
                 backdropFilter: 'blur(12px)',
-                WebkitBackdropFilter: 'blur(12px)'
+                WebkitBackdropFilter: 'blur(12px)',
+                opacity: 0.8
               }}
             >
               Continue as guest
