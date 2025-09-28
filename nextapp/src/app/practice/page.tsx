@@ -14,6 +14,7 @@ import { ArrowLeftIcon } from "@radix-ui/react-icons";
 import { Volume2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
+import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from "recharts";
 
 // Type definitions
 type Phoneme = {
@@ -486,7 +487,10 @@ export default function AzureSpeechTest() {
         
         // Only extract phonemes for English
         const practicedPhonemes = lang === "en-US" 
-          ? wordsWithPhonemes.flatMap((word) => word.Phonemes?.map(p => p.Phoneme) || [])
+          ? [
+              ...wordsWithPhonemes.flatMap((word) => word.Phonemes?.map(p => p.Phoneme) || []),
+              ...Object.keys(extractedScores)
+            ].filter((phoneme, index, array) => array.indexOf(phoneme) === index) // Remove duplicates
           : [];
 
         const weakPhonemes = lang === "en-US" 
@@ -800,19 +804,76 @@ export default function AzureSpeechTest() {
                 </div>
               )}
 
-              {/* Category Reviews */}
-              <div className="rounded-xl border p-4">
-                <h2 className="font-semibold mb-2">Category Reviews</h2>
-                <div className="grid md:grid-cols-2 gap-3">
+              {/* Category Reviews - Modern Radar Chart */}
+              <div className="rounded-xl border p-6">
+                <h2 className="font-semibold mb-6 text-center">Performance Overview</h2>
+                <div className="h-96 mb-6">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RadarChart 
+                      data={reviews.map(r => ({
+                        category: r.title,
+                        score: typeof r.score === "number" ? r.score : 0,
+                        fullMark: 100,
+                        description: r.text
+                      }))}
+                      margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+                    >
+                      <PolarGrid 
+                        stroke="#e5e7eb" 
+                        strokeWidth={1}
+                        fill="transparent"
+                      />
+                      <PolarAngleAxis 
+                        dataKey="category" 
+                        tick={{ fontSize: 12, fill: '#374151' }}
+                        className="text-sm font-medium"
+                      />
+                      <PolarRadiusAxis 
+                        angle={90} 
+                        domain={[0, 100]} 
+                        tick={{ fontSize: 10, fill: '#6b7280' }}
+                        tickCount={6}
+                      />
+                      <Radar
+                        name="Score"
+                        dataKey="score"
+                        stroke="#3b82f6"
+                        fill="#3b82f6"
+                        fillOpacity={0.2}
+                        strokeWidth={3}
+                        dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
+                      />
+                    </RadarChart>
+                  </ResponsiveContainer>
+                </div>
+                
+                {/* Category Details with Hover Info */}
+                <div className="grid md:grid-cols-2 gap-4">
                   {reviews.map((r) => (
-                    <div key={r.title} className="rounded-lg border p-3">
-                      <div className="flex items-baseline justify-between">
-                        <div className="font-medium">{r.title}</div>
-                        <div className="text-sm text-gray-500">
-                          {typeof r.score === "number" ? `${r.score.toFixed(1)}/100` : "N/A"}
+                    <div key={r.title} className="group relative rounded-lg border p-4 hover:shadow-md transition-shadow">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold">{r.title}</span>
+                          <div className="relative group/info">
+                            <span className="text-xs bg-gray-100 hover:bg-gray-200 rounded-full w-4 h-4 flex items-center justify-center cursor-help transition-colors">
+                              i
+                            </span>
+                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover/info:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap">
+                              {r.text}
+                              <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-lg font-bold">
+                          {typeof r.score === "number" ? `${r.score.toFixed(1)}%` : "N/A"}
                         </div>
                       </div>
-                      <p className="text-sm text-gray-700 mt-1">{r.text}</p>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-blue-500 h-2 rounded-full transition-all duration-500"
+                          style={{ width: `${typeof r.score === "number" ? r.score : 0}%` }}
+                        ></div>
+                      </div>
                     </div>
                   ))}
                 </div>
