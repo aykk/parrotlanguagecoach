@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import PhonemeHeatmap from "../../components/PhonemeHeatmap";
+import { extractPhonemeScores } from "../../utils/parseAzure";
 
 type Phoneme = {
   Phoneme: string;
@@ -91,6 +93,7 @@ export default function AzureSpeechTest() {
   const [words, setWords] = useState<Word[]>([]);
   const [lastJson, setLastJson] = useState<any>(null);
   const [showIPA, setShowIPA] = useState(false);
+  const [phonemeScores, setPhonemeScores] = useState<{ [phoneme: string]: number }>({});
 
   // Recording / playback
   const mediaStreamRef = useRef<MediaStream | null>(null);
@@ -225,6 +228,7 @@ export default function AzureSpeechTest() {
     setCompletenessScore(null);
     setWords([]);
     setLastJson(null);
+    setPhonemeScores({});
     resetRecording();
 
     try {
@@ -270,8 +274,21 @@ export default function AzureSpeechTest() {
       const parsed = JSON.parse(jsonStr);
       setLastJson(parsed);
 
+      // Debug logging
+      console.log("Raw Azure Response:", parsed);
+      console.log("Recognition Status:", parsed?.RecognitionStatus);
+      console.log("NBest length:", parsed?.NBest?.length);
+
       const nbest = parsed?.NBest?.[0];
       const pa = nbest?.PronunciationAssessment || {};
+
+      // Debug pronunciation assessment data
+      console.log("Pronunciation Assessment data:", pa);
+      console.log("PronScore:", pa.PronScore, typeof pa.PronScore);
+      console.log("AccuracyScore:", pa.AccuracyScore, typeof pa.AccuracyScore);
+      console.log("FluencyScore:", pa.FluencyScore, typeof pa.FluencyScore);
+      console.log("ProsodyScore:", pa.ProsodyScore, typeof pa.ProsodyScore);
+      console.log("CompletenessScore:", pa.CompletenessScore, typeof pa.CompletenessScore);
 
       // Top scores (all direct from Azure PA)
       setOverall(typeof pa.PronScore === "number" ? pa.PronScore : null);
@@ -282,6 +299,16 @@ export default function AzureSpeechTest() {
 
       const wordsWithPhonemes: Word[] = nbest?.Words ?? [];
       setWords(wordsWithPhonemes);
+
+      // Extract phoneme scores for heatmap
+      try {
+        const extractedScores = extractPhonemeScores(parsed);
+        setPhonemeScores(extractedScores);
+        console.log("Extracted phoneme scores:", extractedScores);
+      } catch (error) {
+        console.error("Error extracting phoneme scores:", error);
+        setPhonemeScores({});
+      }
 
       if (parsed?.RecognitionStatus === "NoMatch") {
         setStatus("NoMatch (heard silence/noise). Check mic permission, device, and gain, then try again.");
@@ -428,6 +455,23 @@ export default function AzureSpeechTest() {
           className="rounded-2xl px-3 py-2 border text-sm hover:shadow"
         >
           Debug token route
+        </button>
+
+        <button
+          onClick={() => {
+            console.log("Current state values:");
+            console.log("Overall:", overall);
+            console.log("Accuracy:", accScore);
+            console.log("Fluency:", fluencyScore);
+            console.log("Prosody:", prosodyScore);
+            console.log("Completeness:", completenessScore);
+            console.log("Words:", words);
+            console.log("Last JSON:", lastJson);
+            alert("Check browser console for detailed state information");
+          }}
+          className="rounded-2xl px-3 py-2 border text-sm hover:shadow"
+        >
+          Debug current state
         </button>
 
         <label className="flex items-center gap-2 text-sm">
@@ -597,6 +641,14 @@ export default function AzureSpeechTest() {
               );
             })}
           </div>
+        </div>
+      )}
+
+      {/* Phoneme Heatmap */}
+      {Object.keys(phonemeScores).length > 0 && (
+        <div className="rounded-xl border p-4">
+          <h2 className="font-semibold mb-4">Phoneme Accuracy Heatmap</h2>
+          <PhonemeHeatmap phonemeScores={phonemeScores} />
         </div>
       )}
 
