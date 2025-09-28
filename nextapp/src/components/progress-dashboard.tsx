@@ -384,8 +384,8 @@ export function ProgressDashboard() {
             <CardContent>
               <div className="space-y-3">
                 {recentSessions.map((session, index) => (
-                  <div key={session.id} className="group relative flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors cursor-pointer">
-                    <div className="flex-1">
+                  <div key={session.id} className="group relative flex items-start justify-between p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors cursor-pointer">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <Badge variant="outline">{session.language}</Badge>
                         <span className="text-sm text-muted-foreground">
@@ -393,7 +393,7 @@ export function ProgressDashboard() {
                           {session.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                         </span>
                       </div>
-                      <p className="text-sm font-medium truncate">{session.sentence}</p>
+                      <p className="text-sm font-medium break-words whitespace-normal">{session.sentence}</p>
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="text-right">

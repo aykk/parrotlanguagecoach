@@ -145,7 +145,9 @@ function buildPrompt(request: PhraseGenerationRequest): string {
   const { language, weakPhonemes, difficultyLevel, currentScore, focusAreas } = request
 
   const phonemeList = weakPhonemes.join(", ")
-  const complexityLevel = currentScore || 5
+  // Map difficulty level to numeric complexity
+  const complexityMap = { beginner: 2, intermediate: 5, advanced: 8 }
+  const complexityLevel = complexityMap[difficultyLevel] || 5
   const difficultyDescription = getDifficultyDescription(complexityLevel)
   
   return `Generate 3 practice sentences in ${language}. Target phonemes: ${phonemeList}.
