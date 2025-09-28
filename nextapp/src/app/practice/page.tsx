@@ -786,23 +786,39 @@ export default function AzureSpeechTest() {
     {
       title: "Accuracy",
       score: accScore,
-      text: accScore && accScore < 80 ? "Focus on pronouncing each sound clearly. Practice individual phonemes that scored low." : "Great pronunciation accuracy! Keep up the excellent work."
+      text: accScore === null || accScore === undefined 
+        ? "How clearly you pronounce each sound. Higher scores mean your pronunciation matches the target language better."
+        : accScore < 80 
+          ? "Focus on pronouncing each sound clearly. Practice individual phonemes that scored low." 
+          : "Great pronunciation accuracy! Keep up the excellent work."
     },
     {
       title: "Fluency",
       score: fluencyScore,
-      text: fluencyScore && fluencyScore < 80 ? "Work on speaking more smoothly. Practice connecting words naturally without long pauses." : "Excellent fluency! Your speech flows naturally."
+      text: fluencyScore === null || fluencyScore === undefined 
+        ? "How smoothly and naturally you speak. Higher scores mean fewer pauses and more natural speech flow."
+        : fluencyScore < 80 
+          ? "Work on speaking more smoothly. Practice connecting words naturally without long pauses." 
+          : "Excellent fluency! Your speech flows naturally."
     },
     // Only include intonation for English
     ...(lang === "en-US" ? [{
       title: "Intonation",
       score: intonationScore,
-      text: intonationScore && intonationScore < 80 ? "Focus on intonation and rhythm. Practice the natural melody of the language." : "Great intonation! Your speech rhythm sounds natural."
+      text: intonationScore === null || intonationScore === undefined 
+        ? "The rhythm and melody of your speech. Higher scores mean your intonation matches native speakers better."
+        : intonationScore < 80 
+          ? "Focus on intonation and rhythm. Practice the natural melody of the language." 
+          : "Great intonation! Your speech rhythm sounds natural."
     }] : []),
     {
       title: "Completeness",
       score: completenessScore,
-      text: completenessScore && completenessScore < 80 ? "Make sure to say all the words. Practice the complete sentence without skipping parts." : "Perfect completeness! You said everything clearly."
+      text: completenessScore === null || completenessScore === undefined 
+        ? "How much of the sentence you said. Higher scores mean you spoke more of the target text."
+        : completenessScore < 80 
+          ? "Make sure to say all the words. Practice the complete sentence without skipping parts." 
+          : "Perfect completeness! You said everything clearly."
     }
   ];
 
@@ -831,10 +847,10 @@ export default function AzureSpeechTest() {
 
   return (
     <main className="min-h-screen relative overflow-hidden">
-      {/* Background with parrotparade.jpg */}
+      {/* Background with feathers2.png */}
       <div className="fixed inset-0 z-0">
         <Image
-          src="/parrotparade.jpg"
+          src="/feathers2.png"
           alt="Background"
           fill
           className="object-cover"
@@ -894,168 +910,171 @@ export default function AzureSpeechTest() {
             </TabsList>
 
             <TabsContent value="practice" className="space-y-6">
-              {/* Combined Language, Reference Sentence, and Recording Controls */}
-              <div className="rounded-2xl p-8 border-2 border-white/40 bg-white/70 backdrop-blur-md shadow-xl">
-                <div className="space-y-8">
-                  {/* Language Selector */}
-                  <div className="relative">
-                    <select
-                      className="w-48 rounded-lg border border-white/20 bg-white/70 backdrop-blur-md px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-green-500"
-                      value={lang}
-                      onChange={(e) => setLang(e.target.value as Lang)}
-                    >
-                      {LANGUAGE_OPTIONS.map((option) => (
-                        <option key={option.code} value={option.code}>
-                          {option.flag} {option.name} ({option.code})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+              {/* Language Selector */}
+              <div className="rounded-xl p-4 border-2 border-white/40 bg-white/70 backdrop-blur-md shadow-xl">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-800">Language:</h3>
+                  <select
+                    className="w-48 rounded-lg border border-white/20 bg-white/70 backdrop-blur-md px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-green-500"
+                    value={lang}
+                    onChange={(e) => setLang(e.target.value as Lang)}
+                  >
+                    {LANGUAGE_OPTIONS.map((option) => (
+                      <option key={option.code} value={option.code}>
+                        {option.flag} {option.name} ({option.code})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
 
-                  {/* Reference Sentence */}
-                  <div className="text-center">
-                    <h3 className="text-xl font-semibold text-gray-800 mb-4">Read this sentence out loud!</h3>
-                    <div className="bg-white/50 rounded-xl p-6 border-2 border-gray-200 mb-6">
-                      <textarea
-                        id="ref-input"
-                        className="w-full bg-transparent text-lg font-medium text-center focus:outline-none resize-none"
-                        defaultValue={refText.current}
-                        onChange={(e) => {
-                          refText.current = e.target.value;
-                          setIsAIGenerated(false);
-                          // Auto-resize textarea
-                          e.target.style.height = 'auto';
-                          e.target.style.height = Math.max(80, e.target.scrollHeight) + 'px';
-                        }}
-                        placeholder={SAMPLE_BY_LANG[lang]}
-                        rows={2}
+              {/* Main Practice Area - Side by Side Layout */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Left Side: Reference Sentence */}
+                <div className="rounded-xl p-6 border-2 border-white/40 bg-white/70 backdrop-blur-md shadow-xl">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4">Read this sentence out loud!</h3>
+                  <div className="bg-white/50 rounded-xl p-4 border-2 border-gray-200 mb-4">
+                    <textarea
+                      id="ref-input"
+                      className="w-full bg-transparent text-lg font-medium text-center focus:outline-none resize-none"
+                      defaultValue={refText.current}
+                      onChange={(e) => {
+                        refText.current = e.target.value;
+                        setIsAIGenerated(false);
+                        // Auto-resize textarea
+                        e.target.style.height = 'auto';
+                        e.target.style.height = Math.max(80, e.target.scrollHeight) + 'px';
+                      }}
+                      placeholder={SAMPLE_BY_LANG[lang]}
+                      rows={3}
+                    />
+                  </div>
+                  
+                  {/* AI Generation Controls */}
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">Complexity Level: {complexity}/10</label>
+                      <Slider
+                        value={[complexity]}
+                        onValueChange={(value) => setComplexity(value[0])}
+                        max={10}
+                        min={1}
+                        step={1}
+                        className="mt-2"
+                      />
+                      <div className="flex justify-between text-xs mt-1 text-gray-600">
+                        <span>Beginner</span>
+                        <span>Advanced</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={generateAISentence}
+                      disabled={isGenerating}
+                      className="w-full rounded-lg border border-white/20 bg-green-600 text-white backdrop-blur-md px-4 py-2 font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      {isGenerating ? "Generating..." : "Generate!"}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Right Side: Video Feed */}
+                <div className="rounded-xl p-6 border-2 border-white/40 bg-white/70 backdrop-blur-md shadow-xl">
+                  <LipReader ref={lipReaderRef} />
+                </div>
+              </div>
+
+              {/* Recording Controls - Compact Layout */}
+              <div className="rounded-xl p-6 border-2 border-white/40 bg-white/70 backdrop-blur-md shadow-xl">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Volume Bar */}
+                  <div className="flex flex-col justify-center">
+                    <div className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                      </svg>
+                      Volume
+                    </div>
+                    <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden">
+                      <div 
+                        id="volume-bar"
+                        className="h-full bg-green-500 transition-all duration-100 ease-out"
+                        style={{ width: '0%' }}
                       />
                     </div>
-                    
-                    {/* AI Generation Controls */}
-                    <div className="space-y-4">
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">Complexity Level: {complexity}/10</label>
-                        <Slider
-                          value={[complexity]}
-                          onValueChange={(value) => setComplexity(value[0])}
-                          max={10}
-                          min={1}
-                          step={1}
-                          className="mt-3"
-                        />
-                        <div className="flex justify-between text-xs mt-2 text-gray-600">
-                          <span>Beginner</span>
-                          <span>Advanced</span>
-                        </div>
-                      </div>
-                      <button
-                        onClick={generateAISentence}
-                        disabled={isGenerating}
-                        className="w-32 rounded-lg border border-white/20 bg-green-600 text-white backdrop-blur-md px-4 py-3 font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mx-auto"
-                      >
-                        {isGenerating ? "Generating..." : "Generate!"}
-                      </button>
-                    </div>
                   </div>
 
-                  {/* Lip Reading Practice */}
-                  <LipReader ref={lipReaderRef} />
-
-                  {/* Recording Controls */}
-                  <div className="text-center">
-                    {/* Volume Bar */}
-                    <div className="mb-6">
-                      <div className="bg-white/70 backdrop-blur-md border border-white/20 rounded-xl p-4 shadow-lg">
-                        <div className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
-                          </svg>
-                          Volume
-                        </div>
-                        <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden">
-                          <div 
-                            id="volume-bar"
-                            className="h-full bg-green-500 transition-all duration-100 ease-out"
-                            style={{ width: '0%' }}
-                          />
-                        </div>
+                  {/* Status indicator */}
+                  <div className="flex flex-col justify-center">
+                    {loading ? (
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
+                        <span>Processing...</span>
                       </div>
+                    ) : isListening ? (
+                      <div className="flex items-center gap-2 text-sm text-red-600">
+                        <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+                        <span>Recording live...</span>
+                      </div>
+                    ) : (
+                      <div className="text-sm text-gray-500"></div>
+                    )}
+                  </div>
+
+                  {/* Recording and Playback Controls */}
+                  <div className="flex items-center justify-center gap-4">
+                    {/* Live Recording Button */}
+                    <div className="flex flex-col items-center gap-2">
+                      <button
+                        onClick={isListening ? stopListening : runAssessment}
+                        disabled={!ready || loading}
+                        className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl ${
+                          isListening 
+                            ? 'bg-red-600 hover:bg-red-700' 
+                            : 'bg-red-500 hover:bg-red-600'
+                        } disabled:opacity-50 disabled:cursor-not-allowed`}
+                      >
+                        {processingRecording ? (
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        ) : isListening ? (
+                          <Square className="w-4 h-4 text-white" />
+                        ) : (
+                          <div className="w-4 h-4 rounded-full bg-white"></div>
+                        )}
+                      </button>
+                      <span className="text-xs font-medium text-gray-600">Record</span>
+                    </div>
+
+                    {/* Audio Playback Controls */}
+                    <div className="flex flex-col items-center gap-2">
+                      <button
+                        onClick={() => {
+                          lipReaderRef.current?.startPlayback();
+                        }}
+                        disabled={!ready || !hasRecordedData}
+                        className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl ${
+                          ready && hasRecordedData
+                            ? 'bg-green-600 hover:bg-green-700 text-white' 
+                            : 'bg-gray-400/50 text-gray-200/50 cursor-not-allowed'
+                        }`}
+                      >
+                        <Play className="w-4 h-4 ml-0.5" />
+                      </button>
+                      <span className="text-xs font-medium text-gray-600">Play</span>
                     </div>
                     
-                    {/* Status indicator */}
-                    <div className="mb-6">
-                      {loading ? (
-                        <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
-                          <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
-                          <span>Processing...</span>
-                        </div>
-                      ) : isListening ? (
-                        <div className="flex items-center justify-center gap-2 text-sm text-red-600">
-                          <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
-                          <span>Recording live...</span>
-                        </div>
-                      ) : (
-                        <div className="text-sm text-gray-500">Ready to record</div>
-                      )}
-                    </div>
-
-                    {/* Recording and Playback Controls */}
-                    <div className="flex items-center justify-center gap-8">
-                      {/* Live Recording Button */}
-                      <div className="flex flex-col items-center gap-2">
-                        <button
-                          onClick={isListening ? stopListening : runAssessment}
-                          disabled={!ready || loading}
-                          className={`w-16 h-16 rounded-full flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl ${
-                            isListening 
-                              ? 'bg-red-600 hover:bg-red-700' 
-                              : 'bg-red-500 hover:bg-red-600'
-                          } disabled:opacity-50 disabled:cursor-not-allowed`}
-                        >
-                          {processingRecording ? (
-                            <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          ) : isListening ? (
-                            <Square className="w-6 h-6 text-white" />
-                          ) : (
-                            <div className="w-6 h-6 rounded-full bg-white"></div>
-                          )}
-                        </button>
-                        <span className="text-xs font-medium text-gray-600">Record</span>
-                      </div>
-
-                      {/* Audio Playback Controls - Always visible */}
-                      <div className="flex flex-col items-center gap-2">
-                        <button
-                          onClick={() => {
-                            // Trigger isolated mouth outline playback (which includes audio)
-                            lipReaderRef.current?.startPlayback();
-                          }}
-                          disabled={!ready || !hasRecordedData}
-                          className={`w-16 h-16 rounded-full flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl ${
-                            ready && hasRecordedData
-                              ? 'bg-green-600 hover:bg-green-700 text-white' 
-                              : 'bg-gray-400/50 text-gray-200/50 cursor-not-allowed'
-                          }`}
-                        >
-                          <Play className="w-6 h-6 ml-0.5" />
-                        </button>
-                        <span className="text-xs font-medium text-gray-600">Play</span>
-                      </div>
-                      <div className="flex flex-col items-center gap-2">
-                        <button 
-                          onClick={resetRecording} 
-                          disabled={!ready || !hasRecordedData}
-                          className={`w-16 h-16 rounded-full flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl ${
-                            ready && hasRecordedData
-                              ? 'bg-gray-600 hover:bg-gray-700 text-white' 
-                              : 'bg-gray-400/50 text-gray-200/50 cursor-not-allowed'
-                          }`}
-                        >
-                          <Trash2 className="w-6 h-6" />
-                        </button>
-                        <span className="text-xs font-medium text-gray-600">Clear</span>
-                      </div>
+                    <div className="flex flex-col items-center gap-2">
+                      <button 
+                        onClick={resetRecording} 
+                        disabled={!ready || !hasRecordedData}
+                        className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl ${
+                          ready && hasRecordedData
+                            ? 'bg-gray-600 hover:bg-gray-700 text-white' 
+                            : 'bg-gray-400/50 text-gray-200/50 cursor-not-allowed'
+                        }`}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                      <span className="text-xs font-medium text-gray-600">Clear</span>
                     </div>
                   </div>
                 </div>
@@ -1165,7 +1184,15 @@ export default function AzureSpeechTest() {
 
                   {/* Per-word analysis */}
                   <div className="rounded-xl border-2 border-white/40 bg-white/75 backdrop-blur-md shadow-xl p-4">
-                      <h2 className="font-semibold mb-2">Per-word analysis:</h2>
+                      <div className="flex items-center justify-between mb-2">
+                        <h2 className="font-semibold">Per-word analysis:</h2>
+                        <div className="group relative">
+                          <span className="inline-flex items-center justify-center w-4 h-4 text-xs font-semibold text-gray-500 bg-gray-200 rounded-full cursor-help">i</span>
+                          <div className="absolute right-0 top-6 w-64 p-3 bg-black text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                            Shows pronunciation accuracy for each word you spoke. Green borders indicate high accuracy, red borders show words that need practice.
+                          </div>
+                        </div>
+                      </div>
                     {words.length > 0 ? (
                       <>
                         {lang !== "en-US" && (
@@ -1281,7 +1308,15 @@ export default function AzureSpeechTest() {
 
                   {/* Phoneme Heatmap - only for English */}
                   <div className="rounded-xl border-2 border-white/40 bg-white/75 backdrop-blur-md shadow-xl p-4">
-                      <h2 className="font-semibold mb-4">Phoneme accuracy heatmap:</h2>
+                      <div className="flex items-center justify-between mb-4">
+                        <h2 className="font-semibold">Phoneme accuracy heatmap:</h2>
+                        <div className="group relative">
+                          <span className="inline-flex items-center justify-center w-4 h-4 text-xs font-semibold text-gray-500 bg-gray-200 rounded-full cursor-help">i</span>
+                          <div className="absolute right-0 top-6 w-64 p-3 bg-black text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                            Visual heatmap showing accuracy for each phoneme (speech sound). Red indicates phonemes you should practice more, green shows well-pronounced sounds.
+                          </div>
+                        </div>
+                      </div>
                     {lang === "en-US" && Object.keys(phonemeScores).length > 0 ? (
                       <PhonemeHeatmap phonemeScores={phonemeScores} />
                     ) : (
@@ -1299,7 +1334,15 @@ export default function AzureSpeechTest() {
 
                   {/* Lowest Accuracy Phonemes Practice */}
                   <div className="rounded-xl border-2 border-white/40 bg-white/75 backdrop-blur-md shadow-xl p-4">
-                      <h2 className="font-semibold mb-4">Lowest accuracy phonemes:</h2>
+                      <div className="flex items-center justify-between mb-4">
+                        <h2 className="font-semibold">Lowest accuracy phonemes:</h2>
+                        <div className="group relative">
+                          <span className="inline-flex items-center justify-center w-4 h-4 text-xs font-semibold text-gray-500 bg-gray-200 rounded-full cursor-help">i</span>
+                          <div className="absolute right-0 top-6 w-64 p-3 bg-black text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                            Lists phonemes where your accuracy is below 90%. Click "Practice this sound" to get targeted sentences for improvement.
+                          </div>
+                        </div>
+                      </div>
                     {lang === "en-US" && lowestAccuracyPhonemes.length > 0 ? (
                       <>
                         {lowestAccuracyPhonemes.filter(item => item.accuracy < 90).length > 0 ? (

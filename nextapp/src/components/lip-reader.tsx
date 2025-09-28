@@ -328,6 +328,42 @@ const LipReader = forwardRef<LipReaderRef>((props, ref) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isRecording]);
 
+  // Cleanup camera and microphone when page becomes hidden or user navigates away
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // Page is hidden, stop camera and microphone
+        try {
+          const stream = (videoRef.current?.srcObject as MediaStream) || null;
+          stream?.getTracks().forEach((t) => t.stop());
+          setStatus("Camera stopped (page hidden)");
+        } catch (error) {
+          console.error("Error stopping camera on visibility change:", error);
+        }
+      }
+    };
+
+    const handleBeforeUnload = () => {
+      // Stop camera and microphone when user navigates away
+      try {
+        const stream = (videoRef.current?.srcObject as MediaStream) || null;
+        stream?.getTracks().forEach((t) => t.stop());
+      } catch (error) {
+        console.error("Error stopping camera on beforeunload:", error);
+      }
+    };
+
+    // Add event listeners
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    // Cleanup event listeners
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
+
   // Start/Stop recording with MIC + VIDEO (combined)
   const toggleRecording = async () => {
     console.log('toggleRecording called, videoRef:', !!videoRef.current);
@@ -715,38 +751,31 @@ const LipReader = forwardRef<LipReaderRef>((props, ref) => {
     <div className="border border-white/20 bg-white/70 backdrop-blur-md shadow-lg rounded-2xl p-6">
       <p className="text-xs text-gray-500 mb-4">Status: {status}</p>
 
-      {/* Live camera + isolated mouth outline side by side */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-        {/* Live camera */}
-        <div className="border border-gray-200 rounded-xl p-3">
-          <div className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-            <Camera className="w-4 h-4" />
-            Live Feed
-          </div>
+      {/* Hidden Live Feed (needed for lip tracking) */}
+      <div className="hidden">
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          onLoadedMetadata={syncCanvasToVideo}
+          className="w-full h-full object-cover scale-x-[-1]"
+        />
+        <canvas
+          ref={liveCanvasRef}
+          className="absolute top-0 left-0 pointer-events-none scale-x-[-1]"
+          style={{ width: '100%', height: '100%' }}
+        />
+      </div>
 
-          <div className="relative rounded-lg overflow-hidden bg-black w-full aspect-[4/3] flex items-center justify-center">
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              onLoadedMetadata={syncCanvasToVideo}
-              className="w-full h-full object-cover scale-x-[-1]"
-            />
-            <canvas
-              ref={liveCanvasRef}
-              className="absolute top-0 left-0 pointer-events-none scale-x-[-1]"
-              style={{ width: '100%', height: '100%' }}
-            />
-          </div>
-        </div>
-
+      {/* Isolated Lip Sync */}
+      <div className="mb-4">
         {/* Isolated mouth outline + audio-synced playback */}
-        <div className="border border-gray-200 rounded-xl p-3">
-          <div className="flex justify-between items-center mb-2">
+        <div className="border border-gray-200 rounded-xl p-4">
+          <div className="flex justify-between items-center mb-3">
             <div className="text-sm font-medium text-gray-700 flex items-center gap-2">
               <Eye className="w-4 h-4" />
-              Isolated Mouth Outline
+              Isolated Lip Sync
             </div>
           </div>
 
