@@ -246,10 +246,22 @@ export function ProgressDashboard() {
     }
   }
 
-  const languageData = Object.entries(stats.languageBreakdown).map(([language, count]) => ({
-    name: language.charAt(0).toUpperCase() + language.slice(1),
-    value: count,
-  }))
+  const languageMap: { [key: string]: { name: string; flag: string } } = {
+    'en-US': { name: 'English', flag: '🇺🇸' },
+    'es-ES': { name: 'Spanish', flag: '🇪🇸' },
+    'fr-FR': { name: 'French', flag: '🇫🇷' },
+    'de-DE': { name: 'German', flag: '🇩🇪' },
+    'it-IT': { name: 'Italian', flag: '🇮🇹' },
+    'pt-BR': { name: 'Portuguese', flag: '🇧🇷' },
+  }
+
+  const languageData = Object.entries(stats.languageBreakdown).map(([language, count]) => {
+    const langInfo = languageMap[language] || { name: language.charAt(0).toUpperCase() + language.slice(1), flag: '🌍' }
+    return {
+      name: `${langInfo.flag} ${langInfo.name}`,
+      value: count,
+    }
+  })
 
   const COLORS = ["#3b82f6", "#ef4444", "#f59e0b", "#10b981", "#8b5cf6"]
 
@@ -407,7 +419,7 @@ export function ProgressDashboard() {
                           className="flex items-center justify-between p-2 rounded border"
                         >
                           <span className="font-mono text-lg">/{phoneme}/</span>
-                          <Badge variant="secondary">
+                          <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
                             {accuracy}%
                           </Badge>
                         </div>
@@ -460,7 +472,7 @@ export function ProgressDashboard() {
               <CardDescription>How much time you've spent on each language</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-80">
+              <div className="h-96">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -469,15 +481,26 @@ export function ProgressDashboard() {
                       cy="50%"
                       labelLine={false}
                       label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={80}
+                      outerRadius={120}
                       fill="#8884d8"
                       dataKey="value"
+                      animationBegin={0}
+                      animationDuration={0}
                     >
                       {languageData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="#fff" strokeWidth={2} />
                       ))}
                     </Pie>
-                    <Tooltip />
+                    <Tooltip 
+                      formatter={(value: any, name: any) => [`${value} sessions`, name]}
+                      labelStyle={{ color: '#374151', fontWeight: '500' }}
+                      contentStyle={{ 
+                        backgroundColor: '#f9fafb', 
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                      }}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               </div>

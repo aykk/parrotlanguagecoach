@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase-client";
 import { progressTracker } from "@/lib/progress-tracker";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { EnterIcon, ExitIcon } from "@radix-ui/react-icons";
 
 export const AuthHeader = () => {
   const [user, setUser] = useState<any>(null);
@@ -72,15 +73,21 @@ export const AuthHeader = () => {
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2">
           <Avatar className="w-8 h-8">
-            <AvatarFallback className="bg-blue-500 text-white text-sm">
+            <AvatarFallback className="bg-green-600 text-white text-sm font-semibold">
               {user.email?.charAt(0).toUpperCase() || "U"}
             </AvatarFallback>
           </Avatar>
-          <span className="text-sm text-gray-600 hidden sm:block">
+          <span className="text-sm text-white font-medium hidden sm:block">
             {user.email}
           </span>
         </div>
-        <Button variant="ghost" size="sm" onClick={signOut}>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={signOut}
+          className="bg-white/80 hover:bg-white/90 border-gray-300 text-gray-800 flex items-center gap-2"
+        >
+          <ExitIcon className="w-4 h-4" />
           Log out
         </Button>
       </div>
@@ -89,8 +96,11 @@ export const AuthHeader = () => {
 
   return (
     <div className="flex items-center gap-2">
-      <Button asChild size="sm">
-        <Link href="/signin">Sign in</Link>
+      <Button asChild className="bg-white/85 text-black hover:bg-white/80 border-white transition-all duration-300 font-medium flex items-center gap-2">
+        <Link href="/signin">
+          <EnterIcon className="w-4 h-4" />
+          Sign in
+        </Link>
       </Button>
     </div>
   );

@@ -7,6 +7,7 @@ import { Button } from "./ui/button"
 import { motion } from "framer-motion"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
+import { EnterIcon } from "@radix-ui/react-icons"
 
 export const LandingPage = () => {
   const [currentWordIndex, setCurrentWordIndex] = useState(0)
@@ -25,16 +26,13 @@ export const LandingPage = () => {
       setLoadingDots(".".repeat(dotCount))
     }, 500)
 
-    // Check if this is the first visit
-    const isFirstVisit = !sessionStorage.getItem('hasVisited')
-    const loadingDuration = isFirstVisit ? 2000 : 100
+    // Check if this is a page refresh (not navigation)
+    const isPageRefresh = performance.navigation.type === 1 || performance.getEntriesByType('navigation')[0]?.type === 'reload'
+    const loadingDuration = isPageRefresh ? 2000 : 100
 
     // Set loaded state after appropriate duration
     const timer = setTimeout(() => {
       setIsLoaded(true)
-      if (isFirstVisit) {
-        sessionStorage.setItem('hasVisited', 'true')
-      }
     }, loadingDuration)
 
     // Start word rotation after 3 seconds to let the first word stay longer
@@ -140,8 +138,9 @@ export const LandingPage = () => {
             </Button>
             <Button 
               onClick={() => router.push("/signin")}
-              className="px-10 py-3 bg-white/85 text-black hover:bg-white/80 border-white transition-all duration-300 font-medium text-base"
+              className="px-10 py-3 bg-white/85 text-black hover:bg-white/80 border-white transition-all duration-300 font-medium text-base flex items-center gap-2"
             >
+              <EnterIcon className="w-4 h-4" />
               Sign in
             </Button>
           </div>
