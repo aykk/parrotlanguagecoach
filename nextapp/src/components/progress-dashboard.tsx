@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react"
 import Image from "next/image"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
@@ -215,13 +214,11 @@ export function ProgressDashboard() {
 
   if (stats.totalSessions === 0) {
     return (
-        <Card className="border-2 border-gray-200 shadow-lg">
-          <CardContent className="flex flex-col items-center justify-center h-64 text-center">
+        <div className="flex flex-col items-center justify-center h-64 text-center p-6">
           <Target className="w-16 h-16 text-muted-foreground mb-4" />
           <h3 className="text-lg font-semibold mb-2">No Practice Sessions Yet</h3>
           <p className="text-muted-foreground mb-4">Start practicing to see your progress here!</p>
-        </CardContent>
-      </Card>
+        </div>
     )
   }
 
@@ -277,8 +274,7 @@ export function ProgressDashboard() {
     <div className="space-y-6">
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border-2 border-gray-200 shadow-lg">
-          <CardContent className="pt-6">
+        <div className="rounded-xl p-6 border-2 border-white/40 bg-white/70 backdrop-blur-md shadow-xl">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Total Sessions</p>
@@ -286,11 +282,9 @@ export function ProgressDashboard() {
               </div>
               <Calendar className="w-8 h-8 text-blue-500" />
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        <Card className="border-2 border-gray-200 shadow-lg">
-          <CardContent className="pt-6">
+        <div className="rounded-xl p-6 border-2 border-white/40 bg-white/70 backdrop-blur-md shadow-xl">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Average Score</p>
@@ -298,11 +292,9 @@ export function ProgressDashboard() {
               </div>
               <Target className="w-8 h-8 text-green-500" />
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        <Card className="border-2 border-gray-200 shadow-lg">
-          <CardContent className="pt-6">
+        <div className="rounded-xl p-6 border-2 border-white/40 bg-white/70 backdrop-blur-md shadow-xl">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Improvement</p>
@@ -313,11 +305,9 @@ export function ProgressDashboard() {
               </div>
               {getTrendIcon(stats.recentTrend)}
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        <Card className="border-2 border-gray-200 shadow-lg">
-          <CardContent className="pt-6">
+        <div className="rounded-xl p-6 border-2 border-white/40 bg-white/70 backdrop-blur-md shadow-xl">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Streak</p>
@@ -325,8 +315,7 @@ export function ProgressDashboard() {
               </div>
               <Flame className="w-8 h-8 text-orange-500" />
             </div>
-          </CardContent>
-        </Card>
+          </div>
       </div>
 
       <Tabs defaultValue="progress" className="space-y-4">
@@ -338,12 +327,12 @@ export function ProgressDashboard() {
         </TabsList>
 
         <TabsContent value="progress" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Phoneme Mastery Progress</CardTitle>
-              <CardDescription>Track how your phonemes improve from "Needs Work" to "Improving" to "Mastered" over time!</CardDescription>
-            </CardHeader>
-            <CardContent>
+          <div className="rounded-xl p-6 border-2 border-white/40 bg-white/70 backdrop-blur-md shadow-xl">
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold">Phoneme Mastery Progress</h3>
+              <p className="text-sm text-muted-foreground">Track how your phonemes improve from "Needs Work" to "Improving" to "Mastered" over time!</p>
+            </div>
+            <div>
               {phonemeMasteryData.sessions.length > 0 ? (
                 <div className="h-80">
                   <PhonemeProgressChart
@@ -358,15 +347,15 @@ export function ProgressDashboard() {
                   Complete some practice sessions to see your phoneme mastery progress
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card>
-            <CardHeader>
+          <div className="rounded-xl p-6 border-2 border-white/40 bg-white/70 backdrop-blur-md shadow-xl">
+            <div className="mb-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>Score Progression</CardTitle>
-                  <CardDescription>Track your pronunciation improvement over time</CardDescription>
+                  <h3 className="text-lg font-semibold">Score Progression</h3>
+                  <p className="text-sm text-muted-foreground">Track your pronunciation improvement over time</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <label className="text-sm font-medium">Time Range:</label>
@@ -382,8 +371,8 @@ export function ProgressDashboard() {
                   </select>
                 </div>
               </div>
-            </CardHeader>
-            <CardContent>
+            </div>
+            <div>
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={scoreHistory}>
@@ -405,18 +394,18 @@ export function ProgressDashboard() {
                   </LineChart>
                 </ResponsiveContainer>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </TabsContent>
 
         <TabsContent value="phonemes" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Strongest Phonemes</CardTitle>
-                <CardDescription>Sounds with highest accuracy</CardDescription>
-              </CardHeader>
-              <CardContent>
+            <div className="rounded-xl p-6 border-2 border-white/40 bg-white/70 backdrop-blur-md shadow-xl">
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold">Strongest Phonemes</h3>
+                <p className="text-sm text-muted-foreground">Sounds with highest accuracy</p>
+              </div>
+              <div>
                 <div className="space-y-2">
                   {stats.strongestPhonemes.length > 0 ? (
                     stats.strongestPhonemes.map((phoneme, index) => {
@@ -437,15 +426,15 @@ export function ProgressDashboard() {
                     <p className="text-muted-foreground text-sm">Keep practicing to see your strengths!</p>
                   )}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Phonemes to Practice</CardTitle>
-                <CardDescription>Sounds under 60% accuracy</CardDescription>
-              </CardHeader>
-              <CardContent>
+            <div className="rounded-xl p-6 border-2 border-white/40 bg-white/70 backdrop-blur-md shadow-xl">
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold">Phonemes to Practice</h3>
+                <p className="text-sm text-muted-foreground">Sounds under 60% accuracy</p>
+              </div>
+              <div>
                 <div className="space-y-2">
                   {Object.entries(stats.phonemeAccuracy)
                     .filter(([_, accuracy]) => accuracy < 60)
@@ -468,18 +457,18 @@ export function ProgressDashboard() {
                     <p className="text-muted-foreground text-sm">Great job! All your phonemes are performing well.</p>
                   )}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
         </TabsContent>
 
         <TabsContent value="languages" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Language Practice Distribution</CardTitle>
-              <CardDescription>How much time you've spent on each language</CardDescription>
-            </CardHeader>
-            <CardContent>
+          <div className="rounded-xl p-6 border-2 border-white/40 bg-white/70 backdrop-blur-md shadow-xl">
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold">Language Practice Distribution</h3>
+              <p className="text-sm text-muted-foreground">How much time you've spent on each language</p>
+            </div>
+            <div>
               <div className="h-96">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -512,17 +501,17 @@ export function ProgressDashboard() {
                   </PieChart>
                 </ResponsiveContainer>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </TabsContent>
 
         <TabsContent value="sessions" className="space-y-4">
-          <Card>
-            <CardHeader>
+          <div className="rounded-xl p-6 border-2 border-white/40 bg-white/70 backdrop-blur-md shadow-xl">
+            <div className="mb-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>Recent Practice Sessions</CardTitle>
-                  <CardDescription>Your latest pronunciation practice history</CardDescription>
+                  <h3 className="text-lg font-semibold">Recent Practice Sessions</h3>
+                  <p className="text-sm text-muted-foreground">Your latest pronunciation practice history</p>
                 </div>
                 {recentSessions.length > 0 && (
                   <button
@@ -539,8 +528,8 @@ export function ProgressDashboard() {
                   </button>
                 )}
               </div>
-            </CardHeader>
-            <CardContent>
+            </div>
+            <div>
               <div className="space-y-3">
                 {recentSessions.map((session, index) => (
                   <div key={session.id} className="group relative flex items-start justify-between p-4 rounded-lg border-2 border-gray-200 bg-card hover:bg-muted/50 transition-colors cursor-pointer shadow-md">
@@ -579,8 +568,8 @@ export function ProgressDashboard() {
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

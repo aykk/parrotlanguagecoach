@@ -909,7 +909,7 @@ export default function AzureSpeechTest() {
               <TabsTrigger value="dashboard" className="data-[state=active]:bg-green-700 data-[state=active]:text-white">Dashboard</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="practice" className="space-y-6">
+            <TabsContent value="practice" className="bg-white/70 backdrop-blur-md rounded-2xl p-6 border-2 border-white/40 shadow-xl space-y-6">
               {/* Language Selector */}
               <div className="rounded-xl p-4 border-2 border-white/40 bg-white/70 backdrop-blur-md shadow-xl">
                 <div className="flex items-center justify-between">
@@ -1409,7 +1409,7 @@ export default function AzureSpeechTest() {
 
             </TabsContent>
 
-            <TabsContent value="dashboard" className="space-y-6">
+            <TabsContent value="dashboard" className="bg-white/70 backdrop-blur-md rounded-2xl p-6 border-2 border-white/40 shadow-xl space-y-6">
               <ProgressDashboard />
             </TabsContent>
           </Tabs>

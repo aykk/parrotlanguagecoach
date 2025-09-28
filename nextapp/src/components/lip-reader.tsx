@@ -748,7 +748,7 @@ const LipReader = forwardRef<LipReaderRef>((props, ref) => {
   }
 
   return (
-    <div className="border border-white/20 bg-white/70 backdrop-blur-md shadow-lg rounded-2xl p-6">
+    <div className="w-full">
       {/* Header */}
       <div className="flex items-center gap-2 mb-4">
         <Eye className="w-4 h-4 text-gray-700" />
