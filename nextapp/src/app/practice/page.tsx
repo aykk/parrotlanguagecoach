@@ -419,9 +419,13 @@ export default function AzureSpeechTest() {
     try {
       const difficultyLevel = complexity <= 3 ? "beginner" : complexity <= 7 ? "intermediate" : "advanced";
       
+      // Convert ARPAbet phoneme to IPA for AI generation
+      const ipaPhoneme = toIPA(phoneme);
+      console.log(`Converting phoneme ${phoneme} to IPA: ${ipaPhoneme}`);
+      
       const result = await aiPhraseGenerator.generateTargetedPhrases({
         language: lang,
-        weakPhonemes: [phoneme],
+        weakPhonemes: [ipaPhoneme],
         difficultyLevel: difficultyLevel as "beginner" | "intermediate" | "advanced",
         currentScore: 75,
         focusAreas: []
