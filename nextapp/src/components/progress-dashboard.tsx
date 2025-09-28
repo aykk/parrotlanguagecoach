@@ -16,8 +16,91 @@ import {
   Pie,
   Cell,
 } from "recharts"
-import { TrendingUp, TrendingDown, Minus, Calendar, Target, Flame, Clock } from "lucide-react"
+import { TrendingUp, TrendingDown, Minus, Calendar, Target, Flame, Clock, Globe, MessageSquare, Timer } from "lucide-react"
 import { progressTracker, type ProgressStats, type SessionData } from "@/lib/progress-tracker"
+
+// Tooltip component for session details
+const SessionTooltip = ({ session }: { session: SessionData }) => {
+  return (
+    <div className="absolute z-50 w-80 p-4 bg-popover border rounded-lg shadow-lg pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <Globe className="w-4 h-4 text-blue-500" />
+          <span className="font-medium">Language: {session.language}</span>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <MessageSquare className="w-4 h-4 text-green-500" />
+          <span className="font-medium">Phrase:</span>
+        </div>
+        <p className="text-sm text-muted-foreground ml-6 italic">"{session.sentence}"</p>
+        
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Target className="w-4 h-4 text-purple-500" />
+              <span className="text-sm font-medium">Overall: {session.overallScore}%</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Target className="w-4 h-4 text-blue-500" />
+              <span className="text-sm font-medium">Accuracy: {session.accuracy}%</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Target className="w-4 h-4 text-green-500" />
+              <span className="text-sm font-medium">Fluency: {session.fluency}%</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Target className="w-4 h-4 text-orange-500" />
+              <span className="text-sm font-medium">Completeness: {session.completeness}%</span>
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Timer className="w-4 h-4 text-red-500" />
+              <span className="text-sm font-medium">Duration: {Math.round(session.duration)}s</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-gray-500" />
+              <span className="text-sm font-medium">
+                {session.timestamp.toLocaleDateString()} at {session.timestamp.toLocaleTimeString()}
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        {session.weakPhonemes && session.weakPhonemes.length > 0 && (
+          <div>
+            <span className="text-sm font-medium text-red-600">Weak Phonemes:</span>
+            <div className="flex flex-wrap gap-1 mt-1">
+              {session.weakPhonemes.map((phoneme, index) => (
+                <span key={index} className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded">
+                  {phoneme}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {session.practicedPhonemes && session.practicedPhonemes.length > 0 && (
+          <div>
+            <span className="text-sm font-medium text-green-600">Practiced Phonemes:</span>
+            <div className="flex flex-wrap gap-1 mt-1">
+              {session.practicedPhonemes.slice(0, 10).map((phoneme, index) => (
+                <span key={index} className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">
+                  {phoneme}
+                </span>
+              ))}
+              {session.practicedPhonemes.length > 10 && (
+                <span className="text-xs text-muted-foreground">+{session.practicedPhonemes.length - 10} more</span>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
 
 export function ProgressDashboard() {
   const [stats, setStats] = useState<ProgressStats | null>(null)
@@ -301,7 +384,7 @@ export function ProgressDashboard() {
             <CardContent>
               <div className="space-y-3">
                 {recentSessions.map((session, index) => (
-                  <div key={session.id} className="flex items-center justify-between p-4 rounded-lg border bg-card">
+                  <div key={session.id} className="group relative flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors cursor-pointer">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <Badge variant="outline">{session.language}</Badge>
@@ -322,6 +405,7 @@ export function ProgressDashboard() {
                         <span className="text-sm">{Math.round(session.duration)}s</span>
                       </div>
                     </div>
+                    <SessionTooltip session={session} />
                   </div>
                 ))}
               </div>
