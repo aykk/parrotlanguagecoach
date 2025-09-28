@@ -640,49 +640,51 @@ export default function AzureSpeechTest() {
             </TabsList>
 
             <TabsContent value="practice" className="space-y-6">
-              {/* Language + Reference sentence */}
-              <div className="space-y-6">
-                <div className="flex justify-center">
-                  <label className="block w-full max-w-xs">
-                    <span className="text-sm font-medium text-white">Language</span>
-                    <select
-                      className="mt-2 w-full rounded-lg border border-white/20 bg-white/70 backdrop-blur-md px-4 py-3 text-center font-medium focus:outline-none focus:ring-2 focus:ring-green-500"
-                      value={lang}
-                      onChange={(e) => setLang(e.target.value as Lang)}
-                    >
-                      {LANGUAGE_OPTIONS.map((option) => (
-                        <option key={option.code} value={option.code}>
-                          {option.flag} {option.name} ({option.code})
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
+              {/* Combined Language, Reference Sentence, and Recording Controls */}
+              <div className="rounded-2xl p-8 border border-white/20 bg-white/70 backdrop-blur-md shadow-lg">
+                <div className="space-y-8">
+                  {/* Language Selector */}
+                  <div className="text-center">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Select Language</h3>
+                    <label className="block w-full max-w-xs mx-auto">
+                      <select
+                        className="w-full rounded-lg border border-white/20 bg-white/70 backdrop-blur-md px-4 py-3 text-center font-medium focus:outline-none focus:ring-2 focus:ring-green-500"
+                        value={lang}
+                        onChange={(e) => setLang(e.target.value as Lang)}
+                      >
+                        {LANGUAGE_OPTIONS.map((option) => (
+                          <option key={option.code} value={option.code}>
+                            {option.flag} {option.name} ({option.code})
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
 
-                <div className="rounded-lg p-6 border border-white/20 bg-white/70 backdrop-blur-md shadow-lg">
-                  <label className="block">
-                    <span className="text-lg font-semibold mb-3 block text-center text-gray-800">Read this sentence out loud!</span>
-                    <textarea
-                      id="ref-input"
-                      className="w-full rounded-lg border border-white/20 bg-white/70 backdrop-blur-md px-6 py-4 min-h-[80px] resize-none text-lg font-medium text-center focus:outline-none focus:ring-2 focus:ring-green-500"
-                      defaultValue={refText.current}
-                      onChange={(e) => {
-                        refText.current = e.target.value;
-                        setIsAIGenerated(false);
-                        // Auto-resize textarea
-                        e.target.style.height = 'auto';
-                        e.target.style.height = Math.max(80, e.target.scrollHeight) + 'px';
-                      }}
-                      placeholder={SAMPLE_BY_LANG[lang]}
-                      rows={2}
-                    />
-                  </label>
-                  
-                  {/* AI Generation controls integrated */}
-                  <div className="mt-4 pt-4 border-t border-gray-200">
+                  {/* Reference Sentence */}
+                  <div className="text-center">
+                    <h3 className="text-xl font-semibold text-gray-800 mb-4">Read this sentence out loud!</h3>
+                    <div className="bg-white/50 rounded-xl p-6 border-2 border-gray-200 mb-6">
+                      <textarea
+                        id="ref-input"
+                        className="w-full bg-transparent text-lg font-medium text-center focus:outline-none resize-none"
+                        defaultValue={refText.current}
+                        onChange={(e) => {
+                          refText.current = e.target.value;
+                          setIsAIGenerated(false);
+                          // Auto-resize textarea
+                          e.target.style.height = 'auto';
+                          e.target.style.height = Math.max(80, e.target.scrollHeight) + 'px';
+                        }}
+                        placeholder={SAMPLE_BY_LANG[lang]}
+                        rows={2}
+                      />
+                    </div>
+                    
+                    {/* AI Generation Controls */}
                     <div className="space-y-4">
                       <div>
-                        <label className="text-sm font-medium">Complexity Level: {complexity}/10</label>
+                        <label className="text-sm font-medium text-gray-700">Complexity Level: {complexity}/10</label>
                         <Slider
                           value={[complexity]}
                           onValueChange={(value) => setComplexity(value[0])}
@@ -691,7 +693,7 @@ export default function AzureSpeechTest() {
                           step={1}
                           className="mt-3"
                         />
-                        <div className="flex justify-between text-xs mt-2">
+                        <div className="flex justify-between text-xs mt-2 text-gray-600">
                           <span>Beginner</span>
                           <span>Advanced</span>
                         </div>
@@ -699,7 +701,7 @@ export default function AzureSpeechTest() {
                       <button
                         onClick={generateAISentence}
                         disabled={isGenerating}
-                        className="w-full rounded-lg border border-white/20 bg-white/70 backdrop-blur-md px-6 py-3 font-medium hover:bg-white/70 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        className="w-full rounded-lg border border-white/20 bg-white/70 backdrop-blur-md px-6 py-3 font-medium hover:bg-white/80 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                       >
                         {isGenerating ? (
                           <>
@@ -718,79 +720,79 @@ export default function AzureSpeechTest() {
                       )}
                     </div>
                   </div>
-                </div>
-              </div>
 
-              {/* Combined Recording and Audio Playback */}
-              <div className="flex items-center justify-center">
-                <div className="rounded-xl p-6 border border-white/30 bg-white/70 backdrop-blur-lg shadow-xl">
-                  {/* Status at top center */}
-                  <div className="text-center mb-4">
-                    {loading ? (
-                      <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
-                        <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
-                        <span>Processing...</span>
-                      </div>
-                    ) : isListening ? (
-                      <div className="flex items-center justify-center gap-2 text-sm text-red-600">
-                        <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
-                        <span>Recording live...</span>
-                      </div>
-                    ) : (
-                      <div className="text-sm text-gray-500">Ready to record</div>
-                    )}
-                  </div>
-
-                  {/* Buttons centered */}
-                  <div className="flex items-center justify-center gap-6">
-                    {/* Live Recording Button */}
-                    <div className="flex flex-col items-center gap-2">
-                      <button
-                        onClick={isListening ? stopListening : runAssessment}
-                        disabled={!ready || loading}
-                        className={`w-16 h-16 rounded-full flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl ${
-                          isListening 
-                            ? 'bg-red-600 hover:bg-red-700' 
-                            : 'bg-red-500 hover:bg-red-600'
-                        } disabled:opacity-50 disabled:cursor-not-allowed`}
-                      >
-                        {loading ? (
-                          <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        ) : isListening ? (
-                          <Square className="w-6 h-6 text-white" />
-                        ) : (
-                          <div className="w-6 h-6 rounded-full bg-white"></div>
-                        )}
-                      </button>
-                      <span className="text-xs font-medium text-gray-600">Live Recording</span>
+                  {/* Recording Controls */}
+                  <div className="text-center">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Ready to record</h3>
+                    
+                    {/* Status indicator */}
+                    <div className="mb-6">
+                      {loading ? (
+                        <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
+                          <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
+                          <span>Processing...</span>
+                        </div>
+                      ) : isListening ? (
+                        <div className="flex items-center justify-center gap-2 text-sm text-red-600">
+                          <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+                          <span>Recording live...</span>
+                        </div>
+                      ) : (
+                        <div className="text-sm text-gray-500">Ready to record</div>
+                      )}
                     </div>
 
-                    {/* Audio Playback Controls - Only show after recording */}
-                    {audioUrl && (
-                      <>
-                        <div className="flex flex-col items-center gap-2">
-                          <button
-                            onClick={() => {
-                              stopRecording();
-                              if (audioUrl) new Audio(audioUrl).play();
-                            }}
-                            className="w-16 h-16 rounded-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl"
-                          >
-                            <Play className="w-6 h-6 ml-0.5" />
-                          </button>
-                          <span className="text-xs font-medium text-gray-600">Play</span>
-                        </div>
-                        <div className="flex flex-col items-center gap-2">
-                          <button 
-                            onClick={resetRecording} 
-                            className="w-16 h-16 rounded-full bg-gray-600 hover:bg-gray-700 text-white flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl"
-                          >
-                            <Trash2 className="w-6 h-6" />
-                          </button>
-                          <span className="text-xs font-medium text-gray-600">Clear</span>
-                        </div>
-                      </>
-                    )}
+                    {/* Recording and Playback Controls */}
+                    <div className="flex items-center justify-center gap-8">
+                      {/* Live Recording Button */}
+                      <div className="flex flex-col items-center gap-2">
+                        <button
+                          onClick={isListening ? stopListening : runAssessment}
+                          disabled={!ready || loading}
+                          className={`w-16 h-16 rounded-full flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl ${
+                            isListening 
+                              ? 'bg-red-600 hover:bg-red-700' 
+                              : 'bg-red-500 hover:bg-red-600'
+                          } disabled:opacity-50 disabled:cursor-not-allowed`}
+                        >
+                          {loading ? (
+                            <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          ) : isListening ? (
+                            <Square className="w-6 h-6 text-white" />
+                          ) : (
+                            <div className="w-6 h-6 rounded-full bg-white"></div>
+                          )}
+                        </button>
+                        <span className="text-xs font-medium text-gray-600">Live Recording</span>
+                      </div>
+
+                      {/* Audio Playback Controls - Only show after recording */}
+                      {audioUrl && (
+                        <>
+                          <div className="flex flex-col items-center gap-2">
+                            <button
+                              onClick={() => {
+                                stopRecording();
+                                if (audioUrl) new Audio(audioUrl).play();
+                              }}
+                              className="w-16 h-16 rounded-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl"
+                            >
+                              <Play className="w-6 h-6 ml-0.5" />
+                            </button>
+                            <span className="text-xs font-medium text-gray-600">Play</span>
+                          </div>
+                          <div className="flex flex-col items-center gap-2">
+                            <button 
+                              onClick={resetRecording} 
+                              className="w-16 h-16 rounded-full bg-gray-600 hover:bg-gray-700 text-white flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl"
+                            >
+                              <Trash2 className="w-6 h-6" />
+                            </button>
+                            <span className="text-xs font-medium text-gray-600">Clear</span>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
