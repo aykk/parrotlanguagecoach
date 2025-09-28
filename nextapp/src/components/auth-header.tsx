@@ -44,8 +44,7 @@ export const AuthHeader = () => {
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    // Clear all progress data and trigger dashboard refresh
-    progressTracker.clearAllData();
+    // Don't clear data immediately - let the auth state change handle it
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("progressUpdated"));
     }

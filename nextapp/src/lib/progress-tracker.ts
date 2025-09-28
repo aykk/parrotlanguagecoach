@@ -34,17 +34,22 @@ export class ProgressTracker {
     this.loadFromStorage()
   }
 
-  setUserId(userId: string | null) {
+  async setUserId(userId: string | null) {
+    console.log('setUserId called with:', userId, 'current:', this.currentUserId)
+    
     // Don't reset if we're already in the same state
     if (this.currentUserId === userId) {
+      console.log('Same user ID, skipping')
       return
     }
     
     this.currentUserId = userId
     if (userId) {
+      console.log('Loading user data for authenticated user')
       // Load user's data from Supabase
-      this.loadUserData()
+      await this.loadUserData()
     } else {
+      console.log('Switching to guest mode')
       // Only clear sessions if we actually have sessions to preserve
       if (this.sessions.length > 0) {
         // Don't clear sessions, just switch to guest mode
@@ -56,6 +61,10 @@ export class ProgressTracker {
   }
 
   async addSession(sessionData: Omit<SessionData, "id" | "timestamp">): Promise<SessionData> {
+    console.log('=== ADD SESSION CALLED ===')
+    console.log('Current user ID:', this.currentUserId)
+    console.log('Session data:', sessionData)
+    
     // Ensure we're properly initialized
     if (typeof window === "undefined") {
       throw new Error("Progress tracker not available in server environment")
@@ -68,16 +77,21 @@ export class ProgressTracker {
       userId: this.currentUserId || undefined,
     }
 
+    console.log('Created session:', session)
     this.sessions.push(session)
+    console.log('Total sessions now:', this.sessions.length)
     
     if (this.currentUserId) {
+      console.log('User is signed in, saving to Supabase')
       // Save to Supabase for signed-in users
       await this.saveToSupabase(session)
     } else {
+      console.log('User is guest, saving to localStorage')
       // Save to localStorage for guest users
       this.saveToStorage()
     }
 
+    console.log('Dispatching events')
     window.dispatchEvent(new CustomEvent("progressUpdated"))
     window.dispatchEvent(new CustomEvent("sessionAdded"))
 
@@ -404,6 +418,7 @@ export class ProgressTracker {
   }
 
   clearAllData() {
+    // Only clear local sessions, don't touch Supabase data
     this.sessions = []
     this.currentUserId = null
     this.saveToStorage()
@@ -425,6 +440,8 @@ export class ProgressTracker {
     try {
       const { supabase } = await import('./supabase-client')
       
+      console.log('Loading user data for user:', this.currentUserId)
+      
       // Load pronunciation sessions
       const { data: sessions, error: sessionsError } = await supabase
         .from('pronunciation_sessions')
@@ -437,13 +454,16 @@ export class ProgressTracker {
         return
       }
 
+      console.log('Loaded sessions from Supabase:', sessions?.length || 0)
+      console.log('Raw sessions data:', sessions)
+
       // Convert Supabase data to SessionData format
       this.sessions = sessions.map(session => ({
         id: session.id,
         timestamp: new Date(session.created_at),
         language: session.language,
         sentence: session.phrase,
-        overallScore: session.accuracy_score,
+        overallScore: session.pronunciation_score,
         accuracy: session.accuracy_score,
         fluency: session.fluency_score,
         completeness: 100, // Default completeness
@@ -452,6 +472,8 @@ export class ProgressTracker {
         duration: session.session_duration || 0,
         userId: session.user_id
       }))
+
+      console.log('Converted sessions:', this.sessions.length)
 
     } catch (error) {
       console.error('Error loading user data:', error)
@@ -463,6 +485,9 @@ export class ProgressTracker {
 
     try {
       const { supabase } = await import('./supabase-client')
+      
+      console.log('Saving session to Supabase for user:', this.currentUserId)
+      console.log('Session data:', session)
       
       const { error } = await supabase
         .from('pronunciation_sessions')
@@ -480,6 +505,8 @@ export class ProgressTracker {
 
       if (error) {
         console.error('Error saving session to Supabase:', error)
+      } else {
+        console.log('Session saved successfully to Supabase')
       }
     } catch (error) {
       console.error('Error saving to Supabase:', error)

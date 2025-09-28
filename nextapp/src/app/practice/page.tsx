@@ -87,7 +87,7 @@ function Tooltip({ label, children }: { label: string; children: React.ReactNode
 // --- Score card with hover brief
 function ScoreCard({ label, value, brief }: { label: string; value: number | null; brief: string }) {
   return (
-    <div className="rounded-xl border border-white/20 bg-white/75 backdrop-blur-md shadow-lg p-4">
+    <div className="rounded-xl border-2 border-white/40 bg-white/75 backdrop-blur-md shadow-xl p-4">
       <div className="text-xs text-gray-600 flex items-center gap-2">
         <span>{label}</span>
         <Tooltip label={brief}>
@@ -135,6 +135,7 @@ export default function AzureSpeechTest() {
   const [processingRecording, setProcessingRecording] = useState(false);
   const [loadingDots, setLoadingDots] = useState(".");
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
   // Initial loading screen (2 seconds on first load/refresh)
   useEffect(() => {
@@ -142,6 +143,39 @@ export default function AzureSpeechTest() {
       setIsInitialLoad(false);
     }, 2000);
     return () => clearTimeout(timer);
+  }, []);
+
+  // Authentication effect
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        console.log('=== INITIALIZING AUTH IN PRACTICE PAGE ===')
+        const { data } = await supabase.auth.getUser()
+        console.log('Initial user data:', data.user)
+        setCurrentUser(data.user)
+        console.log('Setting user ID to:', data.user?.id || null)
+        await progressTracker.setUserId(data.user?.id || null)
+        
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+          console.log('Auth state changed:', event, session?.user?.email)
+          setCurrentUser(session?.user ?? null)
+          console.log('Setting user ID to:', session?.user?.id || null)
+          await progressTracker.setUserId(session?.user?.id || null)
+          
+          // If user logged out, clear the dashboard
+          if (!session?.user) {
+            if (typeof window !== "undefined") {
+              window.dispatchEvent(new CustomEvent("progressUpdated"))
+            }
+          }
+        })
+        
+        return () => subscription.unsubscribe()
+      } catch (error) {
+        console.error('Auth init failed:', error)
+      }
+    }
+    initAuth()
   }, []);
 
   // Phoneme pronunciation mapping (how to pronounce each phoneme)
@@ -621,7 +655,10 @@ export default function AzureSpeechTest() {
             duration,
           };
           
+          console.log('=== SAVING SESSION FROM PRACTICE PAGE ===')
+          console.log('Session data to save:', sessionData)
           const savedSession = await progressTracker.addSession(sessionData);
+          console.log('Session saved:', savedSession)
           
           // Trigger dashboard update
           if (typeof window !== "undefined") {
@@ -777,7 +814,7 @@ export default function AzureSpeechTest() {
 
             <TabsContent value="practice" className="space-y-6">
               {/* Combined Language, Reference Sentence, and Recording Controls */}
-              <div className="rounded-2xl p-8 border border-white/20 bg-white/70 backdrop-blur-md shadow-lg">
+              <div className="rounded-2xl p-8 border-2 border-white/40 bg-white/70 backdrop-blur-md shadow-xl">
                 <div className="space-y-8">
                   {/* Language Selector */}
                   <div className="relative">
@@ -924,7 +961,7 @@ export default function AzureSpeechTest() {
 
 
               {/* Combined Overall Score and Performance Overview */}
-              <div className="rounded-xl border border-white/20 bg-white/75 backdrop-blur-md shadow-lg p-6" data-results>
+              <div className="rounded-xl border-2 border-white/40 bg-white/75 backdrop-blur-md shadow-xl p-6" data-results>
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-bold text-gray-800">Performance overview:</h2>
                   <div className="text-right">
@@ -1024,7 +1061,7 @@ export default function AzureSpeechTest() {
               ) : null}
 
                   {/* Per-word analysis */}
-                  <div className="rounded-xl border border-white/20 bg-white/75 backdrop-blur-md shadow-lg p-4">
+                  <div className="rounded-xl border-2 border-white/40 bg-white/75 backdrop-blur-md shadow-xl p-4">
                       <h2 className="font-semibold mb-2">Per-word analysis:</h2>
                     {words.length > 0 ? (
                       <>
@@ -1051,7 +1088,7 @@ export default function AzureSpeechTest() {
                           };
 
                           return (
-                            <div key={i} className={`border-2 rounded-lg p-4 border-white/20 bg-white/75 backdrop-blur-md shadow-lg ${low ? "border-amber-400" : ""}`}>
+                            <div key={i} className={`border-2 rounded-lg p-4 border-white/40 bg-white/75 backdrop-blur-md shadow-xl ${low ? "border-amber-400" : ""}`}>
                               <div className="flex items-center justify-between mb-3">
                                 <div className="flex items-center gap-2">
                                   <span className="font-semibold text-lg">{w.Word}</span>
@@ -1070,7 +1107,7 @@ export default function AzureSpeechTest() {
                                 )}
                               </div>
                               {err && err !== "None" && (
-                                <div className="text-xs px-2 py-1 rounded mb-2 border border-white/20 bg-white/75 backdrop-blur-md">
+                                <div className="text-xs px-2 py-1 rounded mb-2 border-2 border-white/40 bg-white/75 backdrop-blur-md">
                                   {err}
                                 </div>
                               )}
@@ -1140,7 +1177,7 @@ export default function AzureSpeechTest() {
                   </div>
 
                   {/* Phoneme Heatmap - only for English */}
-                  <div className="rounded-xl border border-white/20 bg-white/75 backdrop-blur-md shadow-lg p-4">
+                  <div className="rounded-xl border-2 border-white/40 bg-white/75 backdrop-blur-md shadow-xl p-4">
                       <h2 className="font-semibold mb-4">Phoneme accuracy heatmap:</h2>
                     {lang === "en-US" && Object.keys(phonemeScores).length > 0 ? (
                       <PhonemeHeatmap phonemeScores={phonemeScores} />
@@ -1158,7 +1195,7 @@ export default function AzureSpeechTest() {
                   </div>
 
                   {/* Lowest Accuracy Phonemes Practice */}
-                  <div className="rounded-xl border border-white/20 bg-white/75 backdrop-blur-md shadow-lg p-4">
+                  <div className="rounded-xl border-2 border-white/40 bg-white/75 backdrop-blur-md shadow-xl p-4">
                       <h2 className="font-semibold mb-4">Lowest accuracy phonemes:</h2>
                     {lang === "en-US" && lowestAccuracyPhonemes.length > 0 ? (
                       <>

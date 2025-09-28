@@ -38,13 +38,18 @@ export function PronunciationTrainer() {
   useEffect(() => {
     const initAuth = async () => {
       try {
+        console.log('=== INITIALIZING AUTH ===')
         const { data } = await supabase.auth.getUser()
+        console.log('Initial user data:', data.user)
         setCurrentUser(data.user)
-        progressTracker.setUserId(data.user?.id || null)
+        console.log('Setting user ID to:', data.user?.id || null)
+        await progressTracker.setUserId(data.user?.id || null)
         
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+          console.log('Auth state changed:', event, session?.user?.email)
           setCurrentUser(session?.user ?? null)
-          progressTracker.setUserId(session?.user?.id || null)
+          console.log('Setting user ID to:', session?.user?.id || null)
+          await progressTracker.setUserId(session?.user?.id || null)
           
           // If user logged out, clear the dashboard
           if (!session?.user) {

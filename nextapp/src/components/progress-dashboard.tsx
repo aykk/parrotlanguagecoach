@@ -215,8 +215,8 @@ export function ProgressDashboard() {
 
   if (stats.totalSessions === 0) {
     return (
-      <Card>
-        <CardContent className="flex flex-col items-center justify-center h-64 text-center">
+        <Card className="border-2 border-gray-200 shadow-lg">
+          <CardContent className="flex flex-col items-center justify-center h-64 text-center">
           <Target className="w-16 h-16 text-muted-foreground mb-4" />
           <h3 className="text-lg font-semibold mb-2">No Practice Sessions Yet</h3>
           <p className="text-muted-foreground mb-4">Start practicing to see your progress here!</p>
@@ -270,7 +270,7 @@ export function ProgressDashboard() {
     <div className="space-y-6">
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
+        <Card className="border-2 border-gray-200 shadow-lg">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -282,7 +282,7 @@ export function ProgressDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-2 border-gray-200 shadow-lg">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -294,7 +294,7 @@ export function ProgressDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-2 border-gray-200 shadow-lg">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -309,7 +309,7 @@ export function ProgressDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-2 border-gray-200 shadow-lg">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -536,7 +536,7 @@ export function ProgressDashboard() {
             <CardContent>
               <div className="space-y-3">
                 {recentSessions.map((session, index) => (
-                  <div key={session.id} className="group relative flex items-start justify-between p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors cursor-pointer">
+                  <div key={session.id} className="group relative flex items-start justify-between p-4 rounded-lg border-2 border-gray-200 bg-card hover:bg-muted/50 transition-colors cursor-pointer shadow-md">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <Badge variant="outline">{session.language}</Badge>
