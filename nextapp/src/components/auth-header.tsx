@@ -73,11 +73,11 @@ export const AuthHeader = () => {
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2">
           <Avatar className="w-8 h-8">
-            <AvatarFallback className="bg-green-600 text-white text-sm font-semibold">
+            <AvatarFallback className="bg-green-600 text-white text-sm font-semibold border border-black/20">
               {user.email?.charAt(0).toUpperCase() || "U"}
             </AvatarFallback>
           </Avatar>
-          <span className="text-sm text-white font-medium hidden sm:block">
+          <span className="text-sm text-white font-medium hidden sm:block" style={{ textShadow: '0 0 1px black' }}>
             {user.email}
           </span>
         </div>
