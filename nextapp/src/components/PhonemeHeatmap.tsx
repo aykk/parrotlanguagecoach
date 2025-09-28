@@ -32,64 +32,64 @@ export default function PhonemeHeatmap({ phonemeScores }: HeatmapProps) {
   // Pronunciation tips for each phoneme
   const PHONEME_TIPS: Record<string, string> = {
     // Vowels
-    "i": "Like 'ee' in 'see'. Keep tongue high and front.",
-    "ɪ": "Like 'i' in 'sit'. Tongue slightly lower than 'ee'.",
-    "e": "Like 'e' in 'bed'. Tongue mid-high, front.",
-    "ɛ": "Like 'e' in 'bet'. Tongue mid-low, front.",
-    "æ": "Like 'a' in 'cat'. Tongue low, front.",
-    "ɑ": "Like 'a' in 'father'. Tongue low, back.",
-    "ɔ": "Like 'o' in 'bought'. Tongue mid-low, back.",
-    "o": "Like 'o' in 'go'. Tongue mid-high, back.",
-    "u": "Like 'oo' in 'food'. Tongue high, back.",
-    "ʊ": "Like 'u' in 'put'. Tongue slightly lower than 'oo'.",
-    "ʌ": "Like 'u' in 'but'. Tongue mid, central.",
-    "ə": "Like 'a' in 'about'. Tongue mid, central (schwa).",
-    "ɝ": "Like 'er' in 'her'. Tongue mid, central, r-colored.",
-    "ɚ": "Like 'er' in 'butter'. Tongue mid, central, r-colored.",
+    "i": "Say 'ee' as in 'see'. Keep your tongue high and forward in your mouth. Smile slightly.",
+    "ɪ": "Say 'i' as in 'sit'. Your tongue is slightly lower than 'ee'. Keep it relaxed.",
+    "e": "Say 'e' as in 'bed'. Your tongue is mid-high and forward. Keep your mouth slightly open.",
+    "ɛ": "Say 'e' as in 'bet'. Your tongue is mid-low and forward. Open your mouth a bit more.",
+    "æ": "Say 'a' as in 'cat'. Your tongue is low and forward. Open your mouth wide.",
+    "ɑ": "Say 'a' as in 'father'. Your tongue is low and back. Open your mouth wide and relax.",
+    "ɔ": "Say 'o' as in 'bought'. Your tongue is mid-low and back. Round your lips slightly.",
+    "o": "Say 'o' as in 'go'. Your tongue is mid-high and back. Round your lips more.",
+    "u": "Say 'oo' as in 'food'. Your tongue is high and back. Round your lips tightly.",
+    "ʊ": "Say 'u' as in 'put'. Your tongue is slightly lower than 'oo'. Round your lips less.",
+    "ʌ": "Say 'u' as in 'but'. Your tongue is mid and central. Keep your mouth relaxed.",
+    "ə": "Say 'a' as in 'about'. Your tongue is mid and central. This is the most relaxed sound.",
+    "ɝ": "Say 'er' as in 'her'. Your tongue is mid and central, with an 'r' quality.",
+    "ɚ": "Say 'er' as in 'butter'. Your tongue is mid and central, with a softer 'r' quality.",
     
     // Diphthongs
-    "eɪ": "Like 'ay' in 'say'. Start with 'e', glide to 'ɪ'.",
-    "aɪ": "Like 'i' in 'time'. Start with 'a', glide to 'ɪ'.",
-    "ɔɪ": "Like 'oy' in 'boy'. Start with 'ɔ', glide to 'ɪ'.",
-    "aʊ": "Like 'ow' in 'cow'. Start with 'a', glide to 'ʊ'.",
-    "oʊ": "Like 'o' in 'go'. Start with 'o', glide to 'ʊ'.",
+    "eɪ": "Say 'ay' as in 'say'. Start with 'e' and glide to 'ɪ'. Move your tongue smoothly.",
+    "aɪ": "Say 'i' as in 'time'. Start with 'a' and glide to 'ɪ'. Move your tongue from low to high.",
+    "ɔɪ": "Say 'oy' as in 'boy'. Start with 'ɔ' and glide to 'ɪ'. Move your tongue from back to front.",
+    "aʊ": "Say 'ow' as in 'cow'. Start with 'a' and glide to 'ʊ'. Move your tongue from low to high.",
+    "oʊ": "Say 'o' as in 'go'. Start with 'o' and glide to 'ʊ'. Move your tongue from mid to high.",
     
     // Consonants - Stops
-    "p": "Like 'p' in 'pat'. Close lips, release with burst.",
-    "b": "Like 'b' in 'bat'. Close lips, release with voice.",
-    "t": "Like 't' in 'top'. Tongue tip to alveolar ridge.",
-    "d": "Like 'd' in 'dog'. Tongue tip to alveolar ridge, voiced.",
-    "k": "Like 'k' in 'cat'. Back of tongue to soft palate.",
-    "g": "Like 'g' in 'go'. Back of tongue to soft palate, voiced.",
+    "p": "Say 'p' as in 'pat'. Close your lips tightly, then release with a burst of air.",
+    "b": "Say 'b' as in 'bat'. Close your lips tightly, then release with your voice.",
+    "t": "Say 't' as in 'top'. Touch your tongue tip to the ridge behind your teeth.",
+    "d": "Say 'd' as in 'dog'. Touch your tongue tip to the ridge behind your teeth, with your voice.",
+    "k": "Say 'k' as in 'cat'. Touch the back of your tongue to the roof of your mouth.",
+    "g": "Say 'g' as in 'go'. Touch the back of your tongue to the roof of your mouth, with your voice.",
     
     // Fricatives
-    "f": "Like 'f' in 'fish'. Lower lip to upper teeth.",
-    "v": "Like 'v' in 'van'. Lower lip to upper teeth, voiced.",
-    "θ": "Like 'th' in 'think'. Tongue tip between teeth.",
-    "ð": "Like 'th' in 'this'. Tongue tip between teeth, voiced.",
-    "s": "Like 's' in 'sun'. Tongue tip near alveolar ridge.",
-    "z": "Like 'z' in 'zoo'. Tongue tip near alveolar ridge, voiced.",
-    "ʃ": "Like 'sh' in 'shoe'. Tongue tip near hard palate.",
-    "ʒ": "Like 's' in 'measure'. Tongue tip near hard palate, voiced.",
-    "h": "Like 'h' in 'hat'. Open glottis, no constriction.",
+    "f": "Say 'f' as in 'fish'. Touch your lower lip to your upper teeth and blow air.",
+    "v": "Say 'v' as in 'van'. Touch your lower lip to your upper teeth and use your voice.",
+    "θ": "Say 'th' as in 'think'. Put your tongue between your teeth and blow air.",
+    "ð": "Say 'th' as in 'this'. Put your tongue between your teeth and use your voice.",
+    "s": "Say 's' as in 'sun'. Put your tongue near the ridge behind your teeth and blow air.",
+    "z": "Say 'z' as in 'zoo'. Put your tongue near the ridge behind your teeth and use your voice.",
+    "ʃ": "Say 'sh' as in 'shoe'. Put your tongue near the roof of your mouth and blow air.",
+    "ʒ": "Say 's' as in 'measure'. Put your tongue near the roof of your mouth and use your voice.",
+    "h": "Say 'h' as in 'hat'. Open your mouth and blow air from your throat.",
     
     // Affricates
-    "t͡ʃ": "Like 'ch' in 'church'. Start like 't', end like 'ʃ'.",
-    "d͡ʒ": "Like 'j' in 'judge'. Start like 'd', end like 'ʒ'.",
+    "t͡ʃ": "Say 'ch' as in 'church'. Start like 't' and end like 'sh'. Make it one smooth sound.",
+    "d͡ʒ": "Say 'j' as in 'judge'. Start like 'd' and end like 'zh'. Make it one smooth sound.",
     
     // Nasals
-    "m": "Like 'm' in 'man'. Close lips, air through nose.",
-    "n": "Like 'n' in 'no'. Tongue tip to alveolar ridge, air through nose.",
-    "ŋ": "Like 'ng' in 'sing'. Back of tongue to soft palate, air through nose.",
+    "m": "Say 'm' as in 'man'. Close your lips and let air come through your nose.",
+    "n": "Say 'n' as in 'no'. Touch your tongue tip to the ridge behind your teeth and let air through your nose.",
+    "ŋ": "Say 'ng' as in 'sing'. Touch the back of your tongue to the roof of your mouth and let air through your nose.",
     
     // Liquids
-    "l": "Like 'l' in 'let'. Tongue tip to alveolar ridge, sides down.",
-    "r": "Like 'r' in 'red'. Tongue tip curled back or bunched.",
-    "ɹ": "Like 'r' in 'red'. Tongue tip near alveolar ridge.",
+    "l": "Say 'l' as in 'let'. Touch your tongue tip to the ridge behind your teeth and let air flow around the sides.",
+    "r": "Say 'r' as in 'red'. Curl your tongue tip back or bunch it in the middle of your mouth.",
+    "ɹ": "Say 'r' as in 'red'. Put your tongue tip near the ridge behind your teeth.",
     
     // Glides
-    "w": "Like 'w' in 'wet'. Round lips, tongue back.",
-    "j": "Like 'y' in 'yes'. Tongue high, front.",
+    "w": "Say 'w' as in 'wet'. Round your lips and move your tongue to the back of your mouth.",
+    "j": "Say 'y' as in 'yes'. Keep your tongue high and forward in your mouth.",
   };
 
   // Convert phonemes to IPA symbols for display
