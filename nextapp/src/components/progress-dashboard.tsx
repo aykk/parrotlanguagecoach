@@ -24,7 +24,7 @@ import PhonemeProgressChart from "./PhonemeProgressChart"
 // Tooltip component for session details
 const SessionTooltip = ({ session }: { session: SessionData }) => {
   return (
-    <div className="absolute z-50 w-80 p-4 bg-popover border rounded-lg shadow-lg pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+    <div className="absolute z-50 w-80 p-4 bg-popover border rounded-lg shadow-lg pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 -top-2 -translate-y-full">
       <div className="space-y-3">
         <div className="flex items-center gap-2">
           <Globe className="w-4 h-4 text-blue-500" />
@@ -249,11 +249,18 @@ export function ProgressDashboard() {
 
   const languageMap: { [key: string]: { name: string; flag: string } } = {
     'en-US': { name: 'English', flag: '🇺🇸' },
+    'en': { name: 'English', flag: '🇺🇸' },
+    'en-GB': { name: 'English', flag: '🇺🇸' },
     'es-ES': { name: 'Spanish', flag: '🇪🇸' },
+    'es': { name: 'Spanish', flag: '🇪🇸' },
     'fr-FR': { name: 'French', flag: '🇫🇷' },
+    'fr': { name: 'French', flag: '🇫🇷' },
     'de-DE': { name: 'German', flag: '🇩🇪' },
+    'de': { name: 'German', flag: '🇩🇪' },
     'it-IT': { name: 'Italian', flag: '🇮🇹' },
+    'it': { name: 'Italian', flag: '🇮🇹' },
     'pt-BR': { name: 'Portuguese', flag: '🇧🇷' },
+    'pt': { name: 'Portuguese', flag: '🇧🇷' },
   }
 
   const languageData = Object.entries(stats.languageBreakdown).map(([language, count]) => {

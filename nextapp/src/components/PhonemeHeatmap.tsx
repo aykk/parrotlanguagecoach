@@ -133,7 +133,11 @@ export default function PhonemeHeatmap({ phonemeScores }: HeatmapProps) {
             zmin: 0,
             zmax: 100,
             showscale: false,
-            hovertemplate: "%{x}: %{z}% accuracy<extra></extra>",
+            hovertemplate: "<b>%{x}</b><br>Accuracy: %{z}%<br><br>%{customdata}<extra></extra>",
+            customdata: ipaPhonemes.map(phoneme => {
+              const tip = PHONEME_TIPS[phoneme] || `Pronounce as ${phoneme}`;
+              return tip;
+            }),
           } as any,
         ]}
         layout={{

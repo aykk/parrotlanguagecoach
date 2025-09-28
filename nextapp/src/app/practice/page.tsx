@@ -9,6 +9,7 @@ import { progressTracker } from "@/lib/progress-tracker";
 import { AuthHeader } from "@/components/auth-header";
 import { ProgressDashboard } from "@/components/progress-dashboard";
 import PhonemeHeatmap from "@/components/PhonemeHeatmap";
+import LipReader, { LipReaderRef } from "@/components/lip-reader";
 import { extractPhonemeScores } from "@/lib/parse-azure";
 import { aiPhraseGenerator } from "@/lib/ai-phrase-generator";
 import { Button } from "@/components/ui/button";
@@ -130,12 +131,14 @@ export default function AzureSpeechTest() {
 
   // Phoneme Practice
   const [lowestAccuracyPhonemes, setLowestAccuracyPhonemes] = useState<Array<{phoneme: string, accuracy: number}>>([]);
+  const lipReaderRef = useRef<LipReaderRef>(null);
   const [practiceSentences, setPracticeSentences] = useState<Array<{phoneme: string, sentence: string}>>([]);
   const [generatingPractice, setGeneratingPractice] = useState<string | null>(null);
   const [processingRecording, setProcessingRecording] = useState(false);
   const [loadingDots, setLoadingDots] = useState(".");
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [hasRecordedData, setHasRecordedData] = useState(false);
 
   // Initial loading screen (2 seconds on first load/refresh)
   useEffect(() => {
@@ -178,6 +181,24 @@ export default function AzureSpeechTest() {
     initAuth()
   }, []);
 
+  // Check if there's recorded data available
+  useEffect(() => {
+    const checkRecordedData = () => {
+      if (lipReaderRef.current) {
+        const hasData = lipReaderRef.current.hasRecordedData();
+        setHasRecordedData(hasData);
+      }
+    };
+    
+    // Check initially
+    checkRecordedData();
+    
+    // Check less frequently to reduce performance impact
+    const interval = setInterval(checkRecordedData, 3000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
   // Phoneme pronunciation mapping (how to pronounce each phoneme)
   const PHONEME_PRONUNCIATION: { [key: string]: string } = {
     // Vowels - using more accurate pronunciation
@@ -206,7 +227,6 @@ export default function AzureSpeechTest() {
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const mediaChunksRef = useRef<Blob[]>([]);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const recognizerRef = useRef<any>(null);
@@ -241,64 +261,64 @@ export default function AzureSpeechTest() {
   // Pronunciation tips for each phoneme
   const PHONEME_TIPS: Record<string, string> = {
     // Vowels
-    "i": "Like 'ee' in 'see'. Keep tongue high and front.",
-    "ɪ": "Like 'i' in 'sit'. Tongue slightly lower than 'ee'.",
-    "e": "Like 'e' in 'bed'. Tongue mid-high, front.",
-    "ɛ": "Like 'e' in 'bet'. Tongue mid-low, front.",
-    "æ": "Like 'a' in 'cat'. Tongue low, front.",
-    "ɑ": "Like 'a' in 'father'. Tongue low, back.",
-    "ɔ": "Like 'o' in 'bought'. Tongue mid-low, back.",
-    "o": "Like 'o' in 'go'. Tongue mid-high, back.",
-    "u": "Like 'oo' in 'food'. Tongue high, back.",
-    "ʊ": "Like 'u' in 'put'. Tongue slightly lower than 'oo'.",
-    "ʌ": "Like 'u' in 'but'. Tongue mid, central.",
-    "ə": "Like 'a' in 'about'. Tongue mid, central (schwa).",
-    "ɝ": "Like 'er' in 'her'. Tongue mid, central, r-colored.",
-    "ɚ": "Like 'er' in 'butter'. Tongue mid, central, r-colored.",
+    "i": "Say 'ee' as in 'see'. Keep your tongue high and forward in your mouth. Smile slightly.",
+    "ɪ": "Say 'i' as in 'sit'. Your tongue is slightly lower than 'ee'. Keep it relaxed.",
+    "e": "Say 'e' as in 'bed'. Your tongue is mid-high and forward. Keep your mouth slightly open.",
+    "ɛ": "Say 'e' as in 'bet'. Your tongue is mid-low and forward. Open your mouth a bit more.",
+    "æ": "Say 'a' as in 'cat'. Your tongue is low and forward. Open your mouth wide.",
+    "ɑ": "Say 'a' as in 'father'. Your tongue is low and back. Open your mouth wide and relax.",
+    "ɔ": "Say 'o' as in 'bought'. Your tongue is mid-low and back. Round your lips slightly.",
+    "o": "Say 'o' as in 'go'. Your tongue is mid-high and back. Round your lips more.",
+    "u": "Say 'oo' as in 'food'. Your tongue is high and back. Round your lips tightly.",
+    "ʊ": "Say 'u' as in 'put'. Your tongue is slightly lower than 'oo'. Round your lips less.",
+    "ʌ": "Say 'u' as in 'but'. Your tongue is mid and central. Keep your mouth relaxed.",
+    "ə": "Say 'a' as in 'about'. Your tongue is mid and central. This is the most relaxed sound.",
+    "ɝ": "Say 'er' as in 'her'. Your tongue is mid and central, with an 'r' quality.",
+    "ɚ": "Say 'er' as in 'butter'. Your tongue is mid and central, with a softer 'r' quality.",
     
     // Diphthongs
-    "eɪ": "Like 'ay' in 'say'. Start with 'e', glide to 'ɪ'.",
-    "aɪ": "Like 'i' in 'time'. Start with 'a', glide to 'ɪ'.",
-    "ɔɪ": "Like 'oy' in 'boy'. Start with 'ɔ', glide to 'ɪ'.",
-    "aʊ": "Like 'ow' in 'cow'. Start with 'a', glide to 'ʊ'.",
-    "oʊ": "Like 'o' in 'go'. Start with 'o', glide to 'ʊ'.",
+    "eɪ": "Say 'ay' as in 'say'. Start with 'e' and glide to 'ɪ'. Move your tongue smoothly.",
+    "aɪ": "Say 'i' as in 'time'. Start with 'a' and glide to 'ɪ'. Move your tongue from low to high.",
+    "ɔɪ": "Say 'oy' as in 'boy'. Start with 'ɔ' and glide to 'ɪ'. Move your tongue from back to front.",
+    "aʊ": "Say 'ow' as in 'cow'. Start with 'a' and glide to 'ʊ'. Move your tongue from low to high.",
+    "oʊ": "Say 'o' as in 'go'. Start with 'o' and glide to 'ʊ'. Move your tongue from mid to high.",
     
     // Consonants - Stops
-    "p": "Like 'p' in 'pat'. Close lips, release with burst.",
-    "b": "Like 'b' in 'bat'. Close lips, release with voice.",
-    "t": "Like 't' in 'top'. Tongue tip to alveolar ridge.",
-    "d": "Like 'd' in 'dog'. Tongue tip to alveolar ridge, voiced.",
-    "k": "Like 'k' in 'cat'. Back of tongue to soft palate.",
-    "g": "Like 'g' in 'go'. Back of tongue to soft palate, voiced.",
+    "p": "Say 'p' as in 'pat'. Close your lips tightly, then release with a burst of air.",
+    "b": "Say 'b' as in 'bat'. Close your lips tightly, then release with your voice.",
+    "t": "Say 't' as in 'top'. Touch your tongue tip to the ridge behind your teeth.",
+    "d": "Say 'd' as in 'dog'. Touch your tongue tip to the ridge behind your teeth, with your voice.",
+    "k": "Say 'k' as in 'cat'. Touch the back of your tongue to the roof of your mouth.",
+    "g": "Say 'g' as in 'go'. Touch the back of your tongue to the roof of your mouth, with your voice.",
     
     // Fricatives
-    "f": "Like 'f' in 'fish'. Lower lip to upper teeth.",
-    "v": "Like 'v' in 'van'. Lower lip to upper teeth, voiced.",
-    "θ": "Like 'th' in 'think'. Tongue tip between teeth.",
-    "ð": "Like 'th' in 'this'. Tongue tip between teeth, voiced.",
-    "s": "Like 's' in 'sun'. Tongue tip near alveolar ridge.",
-    "z": "Like 'z' in 'zoo'. Tongue tip near alveolar ridge, voiced.",
-    "ʃ": "Like 'sh' in 'shoe'. Tongue tip near hard palate.",
-    "ʒ": "Like 's' in 'measure'. Tongue tip near hard palate, voiced.",
-    "h": "Like 'h' in 'hat'. Open glottis, no constriction.",
+    "f": "Say 'f' as in 'fish'. Touch your lower lip to your upper teeth and blow air.",
+    "v": "Say 'v' as in 'van'. Touch your lower lip to your upper teeth and use your voice.",
+    "θ": "Say 'th' as in 'think'. Put your tongue between your teeth and blow air.",
+    "ð": "Say 'th' as in 'this'. Put your tongue between your teeth and use your voice.",
+    "s": "Say 's' as in 'sun'. Put your tongue near the ridge behind your teeth and blow air.",
+    "z": "Say 'z' as in 'zoo'. Put your tongue near the ridge behind your teeth and use your voice.",
+    "ʃ": "Say 'sh' as in 'shoe'. Put your tongue near the roof of your mouth and blow air.",
+    "ʒ": "Say 's' as in 'measure'. Put your tongue near the roof of your mouth and use your voice.",
+    "h": "Say 'h' as in 'hat'. Open your mouth and blow air from your throat.",
     
     // Affricates
-    "t͡ʃ": "Like 'ch' in 'church'. Start like 't', end like 'ʃ'.",
-    "d͡ʒ": "Like 'j' in 'judge'. Start like 'd', end like 'ʒ'.",
+    "t͡ʃ": "Say 'ch' as in 'church'. Start like 't' and end like 'sh'. Make it one smooth sound.",
+    "d͡ʒ": "Say 'j' as in 'judge'. Start like 'd' and end like 'zh'. Make it one smooth sound.",
     
     // Nasals
-    "m": "Like 'm' in 'man'. Close lips, air through nose.",
-    "n": "Like 'n' in 'no'. Tongue tip to alveolar ridge, air through nose.",
-    "ŋ": "Like 'ng' in 'sing'. Back of tongue to soft palate, air through nose.",
+    "m": "Say 'm' as in 'man'. Close your lips and let air come through your nose.",
+    "n": "Say 'n' as in 'no'. Touch your tongue tip to the ridge behind your teeth and let air through your nose.",
+    "ŋ": "Say 'ng' as in 'sing'. Touch the back of your tongue to the roof of your mouth and let air through your nose.",
     
     // Liquids
-    "l": "Like 'l' in 'let'. Tongue tip to alveolar ridge, sides down.",
-    "r": "Like 'r' in 'red'. Tongue tip curled back or bunched.",
-    "ɹ": "Like 'r' in 'red'. Tongue tip near alveolar ridge.",
+    "l": "Say 'l' as in 'love'. Touch your tongue tip to the ridge behind your teeth and let air flow around the sides.",
+    "r": "Say 'r' as in 'red'. Curl your tongue tip back without touching anything.",
+    "ɹ": "Say 'r' as in 'red'. Put your tongue tip near the ridge behind your teeth.",
     
     // Glides
-    "w": "Like 'w' in 'wet'. Round lips, tongue back.",
-    "j": "Like 'y' in 'yes'. Tongue high, front.",
+    "w": "Say 'w' as in 'we'. Round your lips and raise the back of your tongue.",
+    "j": "Say 'y' as in 'yes'. Raise your tongue high and forward without touching anything.",
   };
 
   const refText = useRef(SAMPLE_BY_LANG["en-US"]);
@@ -323,7 +343,7 @@ export default function AzureSpeechTest() {
       setReady(true);
     })();
     return () => {
-      if (audioUrl) URL.revokeObjectURL(audioUrl);
+      // Cleanup handled by lip reader component
     };
   }, []);
 
@@ -460,8 +480,7 @@ export default function AzureSpeechTest() {
     mr.ondataavailable = (e) => { if (e.data && e.data.size > 0) mediaChunksRef.current.push(e.data); };
     mr.onstop = () => {
       const blob = new Blob(mediaChunksRef.current, { type: "audio/webm" });
-      if (audioUrl) URL.revokeObjectURL(audioUrl);
-      setAudioUrl(URL.createObjectURL(blob));
+      // Audio is now handled by the lip reader component
     };
     mr.start();
     setIsRecording(true);
@@ -472,10 +491,14 @@ export default function AzureSpeechTest() {
     setIsRecording(false);
   }
   function resetRecording() {
+    console.log('resetRecording called');
     stopRecording();
-    if (audioUrl) URL.revokeObjectURL(audioUrl);
-    setAudioUrl(null);
     mediaChunksRef.current = [];
+    
+    // Clear lip reader data
+    lipReaderRef.current?.clearData();
+    setHasRecordedData(false);
+    console.log('resetRecording completed');
   }
 
   const stopListening = () => {
@@ -483,6 +506,9 @@ export default function AzureSpeechTest() {
       recognizerRef.current.stopContinuousRecognitionAsync();
       setIsListening(false);
       setStatus("Stopped listening manually");
+      
+      // Stop lip reader recording
+      lipReaderRef.current?.stopRecording();
     }
   };
 
@@ -511,6 +537,9 @@ export default function AzureSpeechTest() {
     setLoading(true);
     setProcessingRecording(true);
     setStatus("Getting token…");
+    
+    // Start lip reader recording
+    lipReaderRef.current?.startRecording();
 
     // Reset scores/results
     setOverall(null);
@@ -549,6 +578,10 @@ export default function AzureSpeechTest() {
       // Enable phoneme assessment for all languages
       paConfig.enablePhonemeAssessment = true;
       
+      // Add debugging for completeness
+      console.log('Reference text for completeness:', refText.current);
+      console.log('Reference text length:', refText.current.length);
+      
       paConfig.applyTo(recognizer);
 
       await startRecording();
@@ -584,6 +617,17 @@ export default function AzureSpeechTest() {
       stopRecording();
       setIsListening(false);
       setStatus("Processing result…");
+      
+      // Stop lip reader recording
+      lipReaderRef.current?.stopRecording();
+      
+      // Update recorded data state
+      setTimeout(() => {
+        if (lipReaderRef.current) {
+          const hasData = lipReaderRef.current.hasRecordedData();
+          setHasRecordedData(hasData);
+        }
+      }, 1000);
 
       const jsonStr = result.properties.getProperty(sdk.PropertyId.SpeechServiceResponse_JsonResult);
       const parsed = JSON.parse(jsonStr);
@@ -597,7 +641,44 @@ export default function AzureSpeechTest() {
       setAccScore(typeof pa.AccuracyScore === "number" ? pa.AccuracyScore : null);
       setFluencyScore(typeof pa.FluencyScore === "number" ? pa.FluencyScore : null);
       setIntonationScore(typeof pa.ProsodyScore === "number" ? pa.ProsodyScore : null);
-      setCompletenessScore(typeof pa.CompletenessScore === "number" ? pa.CompletenessScore : null);
+      
+      // Debug completeness score
+      console.log('Azure CompletenessScore:', pa.CompletenessScore);
+      console.log('Azure NBest:', nbest);
+      console.log('Recognized text:', nbest?.Display);
+      console.log('Reference text:', refText.current);
+      
+      // Calculate custom completeness based on word count
+      let customCompleteness = pa.CompletenessScore;
+      if (nbest?.Display && refText.current) {
+        const referenceWords = refText.current.toLowerCase().trim().split(/\s+/);
+        const recognizedWords = nbest.Display.toLowerCase().trim().split(/\s+/);
+        
+        // Count how many reference words were actually spoken
+        // Create a copy of recognized words to avoid double-counting
+        const availableWords = [...recognizedWords];
+        let spokenWords = 0;
+        
+        for (const refWord of referenceWords) {
+          const index = availableWords.indexOf(refWord);
+          if (index !== -1) {
+            spokenWords++;
+            // Remove the matched word to prevent double-counting
+            availableWords.splice(index, 1);
+          }
+        }
+        
+        // Calculate completeness as percentage of words spoken
+        const wordCompleteness = (spokenWords / referenceWords.length) * 100;
+        customCompleteness = Math.round(wordCompleteness);
+        
+        console.log('Reference words:', referenceWords);
+        console.log('Recognized words:', recognizedWords);
+        console.log('Spoken words:', spokenWords, 'out of', referenceWords.length);
+        console.log('Custom completeness:', customCompleteness + '%');
+      }
+      
+      setCompletenessScore(typeof customCompleteness === "number" ? customCompleteness : null);
       
 
       const wordsWithPhonemes: Word[] = nbest?.Words ?? [];
@@ -878,8 +959,30 @@ export default function AzureSpeechTest() {
                     </div>
                   </div>
 
+                  {/* Lip Reading Practice */}
+                  <LipReader ref={lipReaderRef} />
+
                   {/* Recording Controls */}
                   <div className="text-center">
+                    {/* Volume Bar */}
+                    <div className="mb-6">
+                      <div className="bg-white/70 backdrop-blur-md border border-white/20 rounded-xl p-4 shadow-lg">
+                        <div className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                          </svg>
+                          Volume
+                        </div>
+                        <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden">
+                          <div 
+                            id="volume-bar"
+                            className="h-full bg-green-500 transition-all duration-100 ease-out"
+                            style={{ width: '0%' }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    
                     {/* Status indicator */}
                     <div className="mb-6">
                       {loading ? (
@@ -925,12 +1028,12 @@ export default function AzureSpeechTest() {
                       <div className="flex flex-col items-center gap-2">
                         <button
                           onClick={() => {
-                            stopRecording();
-                            if (audioUrl) new Audio(audioUrl).play();
+                            // Trigger isolated mouth outline playback (which includes audio)
+                            lipReaderRef.current?.startPlayback();
                           }}
-                          disabled={!audioUrl}
+                          disabled={!ready || !hasRecordedData}
                           className={`w-16 h-16 rounded-full flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl ${
-                            audioUrl 
+                            ready && hasRecordedData
                               ? 'bg-green-600 hover:bg-green-700 text-white' 
                               : 'bg-gray-400/50 text-gray-200/50 cursor-not-allowed'
                           }`}
@@ -942,9 +1045,9 @@ export default function AzureSpeechTest() {
                       <div className="flex flex-col items-center gap-2">
                         <button 
                           onClick={resetRecording} 
-                          disabled={!audioUrl}
+                          disabled={!ready || !hasRecordedData}
                           className={`w-16 h-16 rounded-full flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl ${
-                            audioUrl 
+                            ready && hasRecordedData
                               ? 'bg-gray-600 hover:bg-gray-700 text-white' 
                               : 'bg-gray-400/50 text-gray-200/50 cursor-not-allowed'
                           }`}
@@ -1208,7 +1311,7 @@ export default function AzureSpeechTest() {
                                     <span 
                                       className="text-lg font-bold text-gray-800 cursor-pointer hover:text-blue-600 transition-colors"
                                       onClick={() => speakPhoneme(item.phoneme)}
-                                      title="Click to hear pronunciation"
+                                      title={`Click to hear pronunciation\n\n${PHONEME_TIPS[item.phoneme] || `Pronounce as ${item.phoneme}`}`}
                                     >
                                       /{item.phoneme}/
                                     </span>
