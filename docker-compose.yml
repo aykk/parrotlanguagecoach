@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  lipread-service:
+    build: ./compvis/services/lipread
+    ports:
+      - "8000:8000"
+    environment:
+      - CUDA_VISIBLE_DEVICES=0  # Use GPU if available
+    volumes:
+      - ~/.cache/huggingface:/root/.cache/huggingface  # Cache model downloads
+    restart: unless-stopped
+    
+  nextapp:
+    build: ./nextapp
+    ports:
+      - "3000:3000"
+    environment:
+      - LIPREAD_SERVICE_URL=http://lipread-service:8000
+    depends_on:
+      - lipread-service
+    restart: unless-stopped
