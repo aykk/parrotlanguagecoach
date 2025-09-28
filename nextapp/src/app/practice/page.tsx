@@ -40,7 +40,7 @@ type Word = {
   PronunciationAssessment?: {
     AccuracyScore?: number;
     FluencyScore?: number;
-    ProsodyScore?: number;
+    IntonationScore?: number;
     CompletenessScore?: number;
     ErrorType?: string; // None | Omission | Insertion | Substitution | ...
     Feedback?: any;
@@ -115,7 +115,7 @@ export default function AzureSpeechTest() {
   const [overall, setOverall] = useState<number | null>(null); // PronScore
   const [accScore, setAccScore] = useState<number | null>(null); // Accuracy
   const [fluencyScore, setFluencyScore] = useState<number | null>(null); // Fluency
-  const [prosodyScore, setProsodyScore] = useState<number | null>(null); // Prosody (Intonation)
+  const [intonationScore, setIntonationScore] = useState<number | null>(null); // Intonation
   const [completenessScore, setCompletenessScore] = useState<number | null>(null); // Completeness
 
   // Results & UI
@@ -128,6 +128,37 @@ export default function AzureSpeechTest() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isAIGenerated, setIsAIGenerated] = useState(false);
 
+  // Phoneme Practice
+  const [lowestAccuracyPhonemes, setLowestAccuracyPhonemes] = useState<Array<{phoneme: string, accuracy: number}>>([]);
+  const [practiceSentences, setPracticeSentences] = useState<Array<{phoneme: string, sentence: string}>>([]);
+  const [generatingPractice, setGeneratingPractice] = useState<string | null>(null);
+  const [processingRecording, setProcessingRecording] = useState(false);
+  const [loadingDots, setLoadingDots] = useState(".");
+
+  // Phoneme pronunciation mapping (how to pronounce each phoneme)
+  const PHONEME_PRONUNCIATION: { [key: string]: string } = {
+    // Vowels - using more accurate pronunciation
+    'i': 'beat', 'ɪ': 'bit', 'e': 'bait', 'ɛ': 'bet', 'æ': 'bat', 'ɑ': 'pot', 'ɔ': 'bought', 'o': 'boat', 'ʊ': 'book', 'u': 'boot', 'ʌ': 'but', 'ə': 'about',
+    'aɪ': 'bite', 'aʊ': 'bout', 'ɔɪ': 'boy', 'eɪ': 'bay', 'oʊ': 'bow', 'ɝ': 'bird', 'ɚ': 'butter',
+    // Consonants - using words that contain the sound
+    'p': 'pop', 'b': 'bob', 't': 'tot', 'd': 'dad', 'k': 'kick', 'g': 'gig', 'f': 'fife', 'v': 'vive', 's': 'sis', 'z': 'zoo',
+    'θ': 'think', 'ð': 'this', 'ʃ': 'wish', 'ʒ': 'vision', 'tʃ': 'church', 'dʒ': 'judge', 'm': 'mom', 'n': 'noon', 'ŋ': 'sing', 'l': 'lull', 'r': 'roar', 'ɹ': 'roar',
+    'w': 'wow', 'j': 'yes', 'h': 'huh'
+  };
+
+  // Function to speak phoneme pronunciation
+  const speakPhoneme = (phoneme: string) => {
+    const pronunciation = PHONEME_PRONUNCIATION[phoneme] || phoneme;
+    const utterance = new SpeechSynthesisUtterance(pronunciation);
+    utterance.rate = 0.5; // Slower for clarity
+    utterance.pitch = 1.0; // Normal pitch
+    utterance.volume = 0.8;
+    
+    // Stop any current speech
+    speechSynthesis.cancel();
+    speechSynthesis.speak(utterance);
+  };
+
   // Recording / playback
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -136,6 +167,20 @@ export default function AzureSpeechTest() {
   const [isRecording, setIsRecording] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const recognizerRef = useRef<any>(null);
+
+  // Loading dots animation
+  useEffect(() => {
+    if (loading && !isListening) {
+      const interval = setInterval(() => {
+        setLoadingDots(prev => {
+          if (prev === ".") return "..";
+          if (prev === "..") return "...";
+          return ".";
+        });
+      }, 500);
+      return () => clearInterval(interval);
+    }
+  }, [loading, isListening]);
 
   // ARPAbet/SAPI -> IPA (best effort)
   const PHONEME_MAP: Record<string, string> = {
@@ -305,6 +350,58 @@ export default function AzureSpeechTest() {
     }
   };
 
+  // Generate practice sentences for lowest accuracy phonemes
+  const generatePracticeSentences = async (phoneme: string) => {
+    setGeneratingPractice(phoneme);
+    try {
+      const difficultyLevel = complexity <= 3 ? "beginner" : complexity <= 7 ? "intermediate" : "advanced";
+      
+      const result = await aiPhraseGenerator.generateTargetedPhrases({
+        language: lang,
+        weakPhonemes: [phoneme],
+        difficultyLevel: difficultyLevel as "beginner" | "intermediate" | "advanced",
+        currentScore: 75,
+        focusAreas: []
+      });
+
+      if (result.phrases.length > 0) {
+        const sentence = result.phrases[0].text;
+        // Update the reference sentence
+        refText.current = sentence;
+        const el = document.getElementById("ref-input") as HTMLTextAreaElement | null;
+        if (el) {
+          el.value = sentence;
+          el.style.height = 'auto';
+          el.style.height = Math.max(60, el.scrollHeight) + 'px';
+        }
+        setIsAIGenerated(true);
+        
+        // Scroll to top of page
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    } catch (error) {
+      console.error("Failed to generate practice sentence:", error);
+    } finally {
+      setGeneratingPractice(null);
+    }
+  };
+
+  // Update lowest accuracy phonemes when phoneme scores change
+  useEffect(() => {
+    if (Object.keys(phonemeScores).length > 0) {
+      const phonemeArray = Object.entries(phonemeScores)
+        .map(([phoneme, accuracy]) => ({ phoneme, accuracy }))
+        .sort((a, b) => a.accuracy - b.accuracy)
+        .slice(0, 3); // Get top 3 lowest accuracy phonemes
+      
+      setLowestAccuracyPhonemes(phonemeArray);
+    } else {
+      // Reset when phoneme scores are cleared (new session or non-English)
+      setLowestAccuracyPhonemes([]);
+    }
+  }, [phonemeScores]);
+
+
   // ----- Recording helpers -----
   async function ensureStream(): Promise<MediaStream> {
     if (mediaStreamRef.current) return mediaStreamRef.current;
@@ -369,13 +466,14 @@ export default function AzureSpeechTest() {
   const runAssessment = async () => {
     if (!sdk) return;
     setLoading(true);
+    setProcessingRecording(true);
     setStatus("Getting token…");
 
     // Reset scores/results
     setOverall(null);
     setAccScore(null);
     setFluencyScore(null);
-    setProsodyScore(null);
+    setIntonationScore(null);
     setCompletenessScore(null);
     setWords([]);
     setLastJson(null);
@@ -403,7 +501,7 @@ export default function AzureSpeechTest() {
         sdk.PronunciationAssessmentGranularity.Phoneme,
         true // miscue detection
       );
-      paConfig.enableProsodyAssessment = true; // for Prosody
+      paConfig.enableProsodyAssessment = true; // for Intonation
       
       // Enable phoneme assessment for all languages
       paConfig.enablePhonemeAssessment = true;
@@ -455,7 +553,7 @@ export default function AzureSpeechTest() {
       setOverall(typeof pa.PronScore === "number" ? pa.PronScore : null);
       setAccScore(typeof pa.AccuracyScore === "number" ? pa.AccuracyScore : null);
       setFluencyScore(typeof pa.FluencyScore === "number" ? pa.FluencyScore : null);
-      setProsodyScore(typeof pa.ProsodyScore === "number" ? pa.ProsodyScore : null);
+      setIntonationScore(typeof pa.ProsodyScore === "number" ? pa.ProsodyScore : null);
       setCompletenessScore(typeof pa.CompletenessScore === "number" ? pa.CompletenessScore : null);
       
 
@@ -530,13 +628,6 @@ export default function AzureSpeechTest() {
         setStatus("NoMatch (heard silence/noise). Check mic permission, device, and gain, then try again.");
       } else {
         setStatus("Done.");
-        // Auto-scroll to results after assessment completes
-        setTimeout(() => {
-          const resultsElement = document.querySelector('[data-results]');
-          if (resultsElement) {
-            resultsElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }
-        }, 500);
       }
     } catch (e: any) {
       stopRecording();
@@ -544,6 +635,22 @@ export default function AzureSpeechTest() {
       setStatus(`Error: ${e.message || String(e)}`);
     } finally {
       setLoading(false);
+      setProcessingRecording(false);
+      // Auto-scroll to Performance Overview after recording finishes
+      setTimeout(() => {
+        const performanceSection = document.querySelector('[data-results]');
+        if (performanceSection) {
+          performanceSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+          // Fallback: scroll to any element with "Performance" in the text
+          const performanceElements = Array.from(document.querySelectorAll('h2, h3, div')).filter(el => 
+            el.textContent?.includes('Performance')
+          );
+          if (performanceElements.length > 0) {
+            performanceElements[0].scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }
+      }, 1000);
     }
   };
 
@@ -559,11 +666,12 @@ export default function AzureSpeechTest() {
       score: fluencyScore,
       text: fluencyScore && fluencyScore < 80 ? "Work on speaking more smoothly. Practice connecting words naturally without long pauses." : "Excellent fluency! Your speech flows naturally."
     },
-    {
-      title: "Prosody",
-      score: prosodyScore,
-      text: prosodyScore && prosodyScore < 80 ? "Focus on intonation and rhythm. Practice the natural melody of the language." : "Great prosody! Your intonation sounds natural."
-    },
+    // Only include intonation for English
+    ...(lang === "en-US" ? [{
+      title: "Intonation",
+      score: intonationScore,
+      text: intonationScore && intonationScore < 80 ? "Focus on intonation and rhythm. Practice the natural melody of the language." : "Great intonation! Your speech rhythm sounds natural."
+    }] : []),
     {
       title: "Completeness",
       score: completenessScore,
@@ -607,7 +715,24 @@ export default function AzureSpeechTest() {
         />
         <div className="absolute inset-0 bg-black/30" />
       </div>
+
       
+      {/* Full-page loading overlay */}
+      {loading && !isListening && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white">
+          <Image
+            src="/parrot.gif"
+            alt="Loading..."
+            width={300}
+            height={300}
+            className="w-72 h-72 object-contain"
+          />
+          <div className="text-xl font-medium text-gray-600">
+            Loading{loadingDots}
+          </div>
+        </div>
+      )}
+
       {/* Main content */}
       <div className="relative z-10 container mx-auto px-4 py-8">
         <motion.div
@@ -644,21 +769,18 @@ export default function AzureSpeechTest() {
               <div className="rounded-2xl p-8 border border-white/20 bg-white/70 backdrop-blur-md shadow-lg">
                 <div className="space-y-8">
                   {/* Language Selector */}
-                  <div className="text-center">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Select Language</h3>
-                    <label className="block w-full max-w-xs mx-auto">
-                      <select
-                        className="w-full rounded-lg border border-white/20 bg-white/70 backdrop-blur-md px-4 py-3 text-center font-medium focus:outline-none focus:ring-2 focus:ring-green-500"
-                        value={lang}
-                        onChange={(e) => setLang(e.target.value as Lang)}
-                      >
-                        {LANGUAGE_OPTIONS.map((option) => (
-                          <option key={option.code} value={option.code}>
-                            {option.flag} {option.name} ({option.code})
-                          </option>
-                        ))}
-                      </select>
-                    </label>
+                  <div className="relative">
+                    <select
+                      className="w-48 rounded-lg border border-white/20 bg-white/70 backdrop-blur-md px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-green-500"
+                      value={lang}
+                      onChange={(e) => setLang(e.target.value as Lang)}
+                    >
+                      {LANGUAGE_OPTIONS.map((option) => (
+                        <option key={option.code} value={option.code}>
+                          {option.flag} {option.name} ({option.code})
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   {/* Reference Sentence */}
@@ -701,30 +823,15 @@ export default function AzureSpeechTest() {
                       <button
                         onClick={generateAISentence}
                         disabled={isGenerating}
-                        className="w-full rounded-lg border border-white/20 bg-white/70 backdrop-blur-md px-6 py-3 font-medium hover:bg-white/80 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        className="w-32 rounded-lg border border-white/20 bg-green-600 text-white backdrop-blur-md px-4 py-3 font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mx-auto"
                       >
-                        {isGenerating ? (
-                          <>
-                            <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-                            Generating...
-                          </>
-                        ) : (
-                          "Generate a sentence for me!"
-                        )}
+                        {isGenerating ? "Generating..." : "Generate!"}
                       </button>
-                      {isAIGenerated && (
-                        <div className="flex items-center gap-2 text-sm px-3 py-2 rounded-lg border border-white/20 bg-white/75 backdrop-blur-md">
-                          <span>✓</span>
-                          AI-generated sentence loaded
-                        </div>
-                      )}
                     </div>
                   </div>
 
                   {/* Recording Controls */}
                   <div className="text-center">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Ready to record</h3>
-                    
                     {/* Status indicator */}
                     <div className="mb-6">
                       {loading ? (
@@ -755,7 +862,7 @@ export default function AzureSpeechTest() {
                               : 'bg-red-500 hover:bg-red-600'
                           } disabled:opacity-50 disabled:cursor-not-allowed`}
                         >
-                          {loading ? (
+                          {processingRecording ? (
                             <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                           ) : isListening ? (
                             <Square className="w-6 h-6 text-white" />
@@ -763,35 +870,41 @@ export default function AzureSpeechTest() {
                             <div className="w-6 h-6 rounded-full bg-white"></div>
                           )}
                         </button>
-                        <span className="text-xs font-medium text-gray-600">Live Recording</span>
+                        <span className="text-xs font-medium text-gray-600">Record</span>
                       </div>
 
-                      {/* Audio Playback Controls - Only show after recording */}
-                      {audioUrl && (
-                        <>
-                          <div className="flex flex-col items-center gap-2">
-                            <button
-                              onClick={() => {
-                                stopRecording();
-                                if (audioUrl) new Audio(audioUrl).play();
-                              }}
-                              className="w-16 h-16 rounded-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl"
-                            >
-                              <Play className="w-6 h-6 ml-0.5" />
-                            </button>
-                            <span className="text-xs font-medium text-gray-600">Play</span>
-                          </div>
-                          <div className="flex flex-col items-center gap-2">
-                            <button 
-                              onClick={resetRecording} 
-                              className="w-16 h-16 rounded-full bg-gray-600 hover:bg-gray-700 text-white flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl"
-                            >
-                              <Trash2 className="w-6 h-6" />
-                            </button>
-                            <span className="text-xs font-medium text-gray-600">Clear</span>
-                          </div>
-                        </>
-                      )}
+                      {/* Audio Playback Controls - Always visible */}
+                      <div className="flex flex-col items-center gap-2">
+                        <button
+                          onClick={() => {
+                            stopRecording();
+                            if (audioUrl) new Audio(audioUrl).play();
+                          }}
+                          disabled={!audioUrl}
+                          className={`w-16 h-16 rounded-full flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl ${
+                            audioUrl 
+                              ? 'bg-green-600 hover:bg-green-700 text-white' 
+                              : 'bg-gray-400/50 text-gray-200/50 cursor-not-allowed'
+                          }`}
+                        >
+                          <Play className="w-6 h-6 ml-0.5" />
+                        </button>
+                        <span className="text-xs font-medium text-gray-600">Play</span>
+                      </div>
+                      <div className="flex flex-col items-center gap-2">
+                        <button 
+                          onClick={resetRecording} 
+                          disabled={!audioUrl}
+                          className={`w-16 h-16 rounded-full flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl ${
+                            audioUrl 
+                              ? 'bg-gray-600 hover:bg-gray-700 text-white' 
+                              : 'bg-gray-400/50 text-gray-200/50 cursor-not-allowed'
+                          }`}
+                        >
+                          <Trash2 className="w-6 h-6" />
+                        </button>
+                        <span className="text-xs font-medium text-gray-600">Clear</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -799,41 +912,21 @@ export default function AzureSpeechTest() {
 
 
 
-              {/* Score cards WITH hover briefs */}
-              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3" data-results>
-                <ScoreCard
-                  label="Accuracy"
-                  value={accScore}
-                  brief="How correctly you pronounce each sound and word compared to a native speaker."
-                />
-                <ScoreCard
-                  label="Fluency"
-                  value={fluencyScore}
-                  brief="How smoothly and naturally you speak, without long pauses or choppiness."
-                />
-                <ScoreCard
-                  label="Prosody"
-                  value={prosodyScore}
-                  brief="The rise and fall of your voice—the 'melody' of speech (intonation, rhythm)."
-                />
-                <ScoreCard
-                  label="Completeness"
-                  value={completenessScore}
-                  brief="Whether you said all expected words without skipping or adding extra ones."
-                />
-              </div>
-
-              {/* Overall score */}
-              {overall !== null && (
-                <div className="rounded-xl border border-white/20 bg-white/75 backdrop-blur-md shadow-lg p-4">
-                  <div className="text-sm text-gray-600">Overall Pronunciation Score</div>
-                  <div className="text-3xl font-bold">{overall.toFixed(1)} / 100</div>
+              {/* Combined Overall Score and Performance Overview */}
+              <div className="rounded-xl border border-white/20 bg-white/75 backdrop-blur-md shadow-lg p-6" data-results>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-gray-800">Performance overview:</h2>
+                  <div className="text-right">
+                    <div className="text-lg font-bold text-gray-600">Overall pronunciation score:</div>
+                    <div className={`text-4xl font-bold ${
+                      overall !== null 
+                        ? overall >= 90 ? 'text-green-600' : overall >= 80 ? 'text-yellow-600' : overall >= 70 ? 'text-orange-600' : 'text-red-600'
+                        : 'text-black'
+                    }`}>
+                      {overall !== null ? `${overall.toFixed(1)} / 100` : "N/A"}
+                    </div>
+                  </div>
                 </div>
-              )}
-
-              {/* Category Reviews - Modern Radar Chart */}
-              <div className="rounded-xl border border-white/20 bg-white/75 backdrop-blur-md shadow-lg p-6">
-                <h2 className="font-semibold mb-6 text-center">Performance Overview</h2>
                 <div className="h-96 mb-6">
                   <ResponsiveContainer width="100%" height="100%">
                     <RadarChart 
@@ -846,13 +939,13 @@ export default function AzureSpeechTest() {
                       margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
                     >
                       <PolarGrid 
-                        stroke="#e5e7eb" 
+                        stroke="#000000" 
                         strokeWidth={1}
                         fill="transparent"
                       />
                       <PolarAngleAxis 
                         dataKey="category" 
-                        tick={{ fontSize: 16, fill: '#1f2937', fontWeight: 'bold' }}
+                        tick={{ fontSize: 16, fill: '#000000', fontWeight: 'bold' }}
                         className="text-lg font-bold"
                       />
                       <PolarRadiusAxis 
@@ -880,7 +973,7 @@ export default function AzureSpeechTest() {
                 {/* Category Details with Hover Info */}
                 <div className="grid md:grid-cols-2 gap-4">
                   {reviews.map((r) => (
-                    <div key={r.title} className="group relative rounded-lg border p-4 hover:shadow-md transition-shadow">
+                    <div key={r.title} className="group relative rounded-lg p-4 hover:shadow-md transition-shadow">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
                           <span className="font-semibold">{r.title}</span>
@@ -920,10 +1013,11 @@ export default function AzureSpeechTest() {
               ) : null}
 
                   {/* Per-word analysis */}
-                  {words.length > 0 && (
-                    <div className="rounded-xl border border-white/20 bg-white/75 backdrop-blur-md shadow-lg p-4">
-                      <h2 className="font-semibold mb-2">Per-word analysis</h2>
-                      {lang !== "en-US" && (
+                  <div className="rounded-xl border border-white/20 bg-white/75 backdrop-blur-md shadow-lg p-4">
+                      <h2 className="font-semibold mb-2">Per-word analysis:</h2>
+                    {words.length > 0 ? (
+                      <>
+                        {lang !== "en-US" && (
                         <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
                           <div className="flex items-center gap-2 text-green-800">
                             <div className="w-2 h-2 bg-green-500 rounded-full"></div>
@@ -983,8 +1077,9 @@ export default function AzureSpeechTest() {
                                       return (
                                         <span
                                           key={j}
-                                          className={`inline-block px-2 py-1 text-xs rounded-lg border ${bad ? "border-red-300" : "border-gray-300"}`}
-                                          title={`Accuracy: ${pAcc.toFixed(1)}%\n\n${tip}`}
+                                          className={`inline-block px-2 py-1 text-xs rounded-lg border cursor-pointer hover:bg-gray-100 transition-colors ${bad ? "border-red-300" : "border-gray-300"}`}
+                                          title={`Accuracy: ${pAcc.toFixed(1)}%\n\n${tip}\n\nClick to hear pronunciation`}
+                                          onClick={() => speakPhoneme(p.Phoneme)}
                                         >
                                           /{symbol}/
                                           <span className="ml-1">({pAcc.toFixed(0)})</span>
@@ -1024,18 +1119,99 @@ export default function AzureSpeechTest() {
                           );
                         })}
                       </div>
-                    </div>
-                  )}
+                    </>
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        <div className="text-lg font-medium">N/A</div>
+                        <div className="text-sm">Complete a recording to see word analysis</div>
+                      </div>
+                    )}
+                  </div>
 
                   {/* Phoneme Heatmap - only for English */}
-                  {lang === "en-US" && Object.keys(phonemeScores).length > 0 && (
-                    <div className="rounded-xl border border-white/20 bg-white/75 backdrop-blur-md shadow-lg p-4">
-                      <h2 className="font-semibold mb-4">Phoneme Accuracy Heatmap</h2>
+                  <div className="rounded-xl border border-white/20 bg-white/75 backdrop-blur-md shadow-lg p-4">
+                      <h2 className="font-semibold mb-4">Phoneme accuracy heatmap:</h2>
+                    {lang === "en-US" && Object.keys(phonemeScores).length > 0 ? (
                       <PhonemeHeatmap phonemeScores={phonemeScores} />
-        </div>
-                  )}
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        <div className="text-lg font-medium">N/A</div>
+                        <div className="text-sm">
+                          {lang !== "en-US" 
+                            ? "Phoneme assessment not supported for this language" 
+                            : "Complete a recording to see phoneme analysis"
+                          }
+                        </div>
+                      </div>
+                    )}
+                  </div>
 
-
+                  {/* Lowest Accuracy Phonemes Practice */}
+                  <div className="rounded-xl border border-white/20 bg-white/75 backdrop-blur-md shadow-lg p-4">
+                      <h2 className="font-semibold mb-4">Lowest accuracy phonemes:</h2>
+                    {lang === "en-US" && lowestAccuracyPhonemes.length > 0 ? (
+                      <>
+                        {lowestAccuracyPhonemes.filter(item => item.accuracy < 90).length > 0 ? (
+                          <div className="space-y-4">
+                            {lowestAccuracyPhonemes.filter(item => item.accuracy < 90).map((item, index) => (
+                              <div key={index} className="border border-gray-200 rounded-lg p-4">
+                                <div className="flex items-center justify-between mb-3">
+                                  <div className="flex items-center gap-3">
+                                    <span 
+                                      className="text-lg font-bold text-gray-800 cursor-pointer hover:text-blue-600 transition-colors"
+                                      onClick={() => speakPhoneme(item.phoneme)}
+                                      title="Click to hear pronunciation"
+                                    >
+                                      /{item.phoneme}/
+                                    </span>
+                                    <span className={`px-2 py-1 rounded text-sm font-medium ${
+                                      item.accuracy >= 80 ? 'bg-green-100 text-green-800' :
+                                      item.accuracy >= 60 ? 'bg-yellow-100 text-yellow-800' :
+                                      'bg-red-100 text-red-800'
+                                    }`}>
+                                      {item.accuracy.toFixed(1)}%
+                                    </span>
+                                  </div>
+                                  <button
+                                    onClick={() => generatePracticeSentences(item.phoneme)}
+                                    disabled={generatingPractice === item.phoneme}
+                                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                  >
+                                    {generatingPractice === item.phoneme ? (
+                                      <>
+                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                        Generating...
+                                      </>
+                                    ) : (
+                                      "Practice this sound"
+                                    )}
+                                  </button>
+                                </div>
+                                <div className="text-sm text-gray-600">
+                                  Click "Practice this sound" to generate a sentence containing this phoneme for focused practice.
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-8">
+                            <div className="text-lg font-medium text-green-600 mb-2">🎉 Congratulations!</div>
+                            <div className="text-gray-600">You didn't struggle on any phonemes this session!</div>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        <div className="text-lg font-medium">N/A</div>
+                        <div className="text-sm">
+                          {lang !== "en-US" 
+                            ? "Phoneme assessment not supported for this language" 
+                            : "Complete a recording to see phoneme analysis"
+                          }
+                        </div>
+                      </div>
+                    )}
+                  </div>
 
             </TabsContent>
 
