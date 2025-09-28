@@ -211,6 +211,87 @@ export class ProgressTracker {
     }))
   }
 
+  getPhonemeMasteryProgress(maxSessions = 30): {
+    sessions: number[];
+    mastered: number[];
+    improving: number[];
+    needsWork: number[];
+  } {
+    if (this.sessions.length === 0) {
+      return { sessions: [], mastered: [], improving: [], needsWork: [] };
+    }
+
+    // Get recent sessions (up to maxSessions)
+    const recentSessions = this.sessions
+      .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
+      .slice(-maxSessions);
+
+    const sessions: number[] = [];
+    const mastered: number[] = [];
+    const improving: number[] = [];
+    const needsWork: number[] = [];
+
+    // Track phoneme accuracy over time
+    const phonemeHistory: { [phoneme: string]: number[] } = {};
+
+    recentSessions.forEach((session, index) => {
+      sessions.push(index + 1);
+
+      // Collect all phonemes from this session
+      const sessionPhonemes = new Set<string>();
+      
+      // Add practiced phonemes
+      session.practicedPhonemes.forEach(phoneme => sessionPhonemes.add(phoneme));
+      
+      // Add weak phonemes
+      session.weakPhonemes.forEach(phoneme => sessionPhonemes.add(phoneme));
+
+      // Update phoneme history
+      sessionPhonemes.forEach(phoneme => {
+        if (!phonemeHistory[phoneme]) {
+          phonemeHistory[phoneme] = [];
+        }
+        // Use overall score as proxy for phoneme accuracy
+        phonemeHistory[phoneme].push(session.overallScore);
+      });
+
+      // Calculate mastery levels for this session
+      let masteredCount = 0;
+      let improvingCount = 0;
+      let needsWorkCount = 0;
+
+      Object.entries(phonemeHistory).forEach(([phoneme, scores]) => {
+        if (scores.length > 0) {
+          const latestScore = scores[scores.length - 1];
+          const avgScore = scores.reduce((a, b) => a + b, 0) / scores.length;
+          
+          // More realistic thresholds
+          if (latestScore >= 90 && avgScore >= 85) {
+            masteredCount++;
+          } else if (latestScore >= 75 || avgScore >= 70) {
+            improvingCount++;
+          } else {
+            needsWorkCount++;
+          }
+        }
+      });
+
+      const totalPhonemes = masteredCount + improvingCount + needsWorkCount;
+      
+      if (totalPhonemes > 0) {
+        mastered.push(Math.round((masteredCount / totalPhonemes) * 100));
+        improving.push(Math.round((improvingCount / totalPhonemes) * 100));
+        needsWork.push(Math.round((needsWorkCount / totalPhonemes) * 100));
+      } else {
+        mastered.push(0);
+        improving.push(0);
+        needsWork.push(0);
+      }
+    });
+
+    return { sessions, mastered, improving, needsWork };
+  }
+
   getScoreHistoryBySessions(sessionCount = 30): Array<{ session: number; score: number; date: string }> {
     const recentSessions = this.sessions
       .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
@@ -221,6 +302,39 @@ export class ProgressTracker {
       score: session.overallScore,
       date: session.timestamp.toISOString().split("T")[0],
     }))
+  }
+
+  getScoreHistoryByTimeRange(range: 'lifetime' | '30days' | '30sessions' | '10sessions'): Array<{ session: number; score: number; date: string }> {
+    let sessions: SessionData[] = [];
+
+    switch (range) {
+      case 'lifetime':
+        sessions = this.sessions.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+        break;
+      case '30days':
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        sessions = this.sessions
+          .filter(session => session.timestamp >= thirtyDaysAgo)
+          .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+        break;
+      case '30sessions':
+        sessions = this.sessions
+          .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
+          .slice(-30);
+        break;
+      case '10sessions':
+        sessions = this.sessions
+          .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
+          .slice(-10);
+        break;
+    }
+
+    return sessions.map((session, index) => ({
+      session: index + 1,
+      score: session.overallScore,
+      date: session.timestamp.toISOString().split("T")[0],
+    }));
   }
 
   private calculateTrendSlope(scores: number[]): number {

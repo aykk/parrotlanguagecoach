@@ -71,6 +71,13 @@ export default function AuthPage() {
 
   return (
     <main className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="absolute top-4 left-4">
+        <Button asChild variant="ghost" size="sm">
+          <Link href="/">
+            ← Back to home
+          </Link>
+        </Button>
+      </div>
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold text-gray-900">Parrot Language Coach</CardTitle>

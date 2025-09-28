@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { Button } from "./ui/button"
 import { motion } from "framer-motion"
 import Image from "next/image"
@@ -10,16 +10,61 @@ import { useRouter } from "next/navigation"
 
 export const LandingPage = () => {
   const [currentWordIndex, setCurrentWordIndex] = useState(0)
+  const [isLoaded, setIsLoaded] = useState(false)
+  const [loadingDots, setLoadingDots] = useState("")
   const rotatingWords = ["confidence", "clarity", "fluency", "accuracy"]
   const router = useRouter()
+  const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  const dotsRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentWordIndex((prev) => (prev + 1) % rotatingWords.length)
-    }, 2000) // Change word every 2 seconds
+    // Animate loading dots
+    let dotCount = 0
+    dotsRef.current = setInterval(() => {
+      dotCount = (dotCount + 1) % 4 // 0, 1, 2, 3
+      setLoadingDots(".".repeat(dotCount))
+    }, 500)
 
-    return () => clearInterval(interval)
+    // Set loaded state after 2 seconds
+    const timer = setTimeout(() => {
+      setIsLoaded(true)
+    }, 2000)
+
+    // Start word rotation after 3 seconds to let the first word stay longer
+    const rotationTimer = setTimeout(() => {
+      intervalRef.current = setInterval(() => {
+        setCurrentWordIndex((prev) => (prev + 1) % rotatingWords.length)
+      }, 3000) // Change word every 3 seconds consistently
+    }, 3000)
+
+    return () => {
+      clearTimeout(timer)
+      clearTimeout(rotationTimer)
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+      }
+      if (dotsRef.current) {
+        clearInterval(dotsRef.current)
+      }
+    }
   }, [])
+
+  if (!isLoaded) {
+    return (
+      <div className="flex overflow-hidden relative flex-col gap-4 justify-center items-center pt-4 w-full h-full short:lg:pt-6 pb-footer-safe-area 2xl:pt-footer-safe-area px-sides short:lg:gap-2 lg:gap-4 bg-white">
+        <Image
+          src="/parrot.gif"
+          alt="Loading..."
+          width={300}
+          height={300}
+          className="w-72 h-72 object-contain"
+        />
+        <div className="text-xl font-medium text-gray-600">
+          Loading{loadingDots}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex overflow-hidden relative flex-col gap-2 justify-center items-center pt-4 w-full h-full short:lg:pt-6 pb-footer-safe-area 2xl:pt-footer-safe-area px-sides short:lg:gap-2 lg:gap-4">
@@ -76,7 +121,12 @@ export const LandingPage = () => {
           <div className="flex gap-6 items-center">
             <Button 
               onClick={() => router.push("/practice")}
-              className="px-10 py-3 bg-white/15 hover:bg-white/25 text-white border-white/40 hover:border-white/60 backdrop-blur-md transition-all duration-300 font-medium text-base"
+              className="px-10 py-3 bg-white/15 hover:bg-white/25 text-white border-white/40 hover:border-white/60 backdrop-blur-md transition-all duration-300 font-medium text-base opacity-100"
+              style={{ 
+                background: 'rgba(255, 255, 255, 0.15)',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)'
+              }}
             >
               Continue as guest
             </Button>

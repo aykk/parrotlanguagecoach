@@ -1,6 +1,7 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { supabase } from "@/lib/supabase-client";
 import { progressTracker } from "@/lib/progress-tracker";
 import { Button } from "@/components/ui/button";
@@ -9,8 +10,17 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 export const AuthHeader = () => {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [loadingDots, setLoadingDots] = useState("");
+  const dotsRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
+    // Animate loading dots
+    let dotCount = 0;
+    dotsRef.current = setInterval(() => {
+      dotCount = (dotCount + 1) % 4; // 0, 1, 2, 3
+      setLoadingDots(".".repeat(dotCount));
+    }, 500);
+
     const init = async () => {
       try {
         const { data } = await supabase.auth.getUser();
@@ -23,6 +33,9 @@ export const AuthHeader = () => {
         console.error("Auth init failed:", e);
       } finally {
         setLoading(false);
+        if (dotsRef.current) {
+          clearInterval(dotsRef.current);
+        }
       }
     };
     init();
@@ -40,7 +53,16 @@ export const AuthHeader = () => {
   if (loading) {
     return (
       <div className="flex items-center gap-2">
-        <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse" />
+        <Image
+          src="/parrot.gif"
+          alt="Loading..."
+          width={96}
+          height={96}
+          className="w-24 h-24 object-contain"
+        />
+        <span className="text-sm text-gray-600">
+          Loading{loadingDots}
+        </span>
       </div>
     );
   }
@@ -67,9 +89,6 @@ export const AuthHeader = () => {
 
   return (
     <div className="flex items-center gap-2">
-      <Button asChild variant="outline" size="sm">
-        <Link href="/signin">Sign up</Link>
-      </Button>
       <Button asChild size="sm">
         <Link href="/signin">Sign in</Link>
       </Button>

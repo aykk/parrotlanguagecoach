@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
+import Image from "next/image"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -18,6 +19,7 @@ import {
 } from "recharts"
 import { TrendingUp, TrendingDown, Minus, Calendar, Target, Flame, Clock, Globe, MessageSquare, Timer, Trash2, AlertTriangle } from "lucide-react"
 import { progressTracker, type ProgressStats, type SessionData } from "@/lib/progress-tracker"
+import PhonemeProgressChart from "./PhonemeProgressChart"
 
 // Tooltip component for session details
 const SessionTooltip = ({ session }: { session: SessionData }) => {
@@ -106,7 +108,16 @@ export function ProgressDashboard() {
   const [stats, setStats] = useState<ProgressStats | null>(null)
   const [recentSessions, setRecentSessions] = useState<SessionData[]>([])
   const [scoreHistory, setScoreHistory] = useState<Array<{ session: number; score: number; date: string }>>([])
+  const [phonemeMasteryData, setPhonemeMasteryData] = useState<{
+    sessions: number[];
+    mastered: number[];
+    improving: number[];
+    needsWork: number[];
+  }>({ sessions: [], mastered: [], improving: [], needsWork: [] });
+  const [scoreRange, setScoreRange] = useState<'lifetime' | '30days' | '30sessions' | '10sessions'>('30sessions');
   const [showClearAllConfirm, setShowClearAllConfirm] = useState(false)
+  const [loadingDots, setLoadingDots] = useState("")
+  const dotsRef = useRef<NodeJS.Timeout | null>(null)
 
   const deleteSession = (sessionId: string) => {
     if (confirm("Are you sure you want to delete this session?")) {
@@ -124,14 +135,28 @@ export function ProgressDashboard() {
   }
 
   useEffect(() => {
+    // Animate loading dots
+    let dotCount = 0
+    dotsRef.current = setInterval(() => {
+      dotCount = (dotCount + 1) % 4 // 0, 1, 2, 3
+      setLoadingDots(".".repeat(dotCount))
+    }, 500)
+
     const loadData = () => {
       const newStats = progressTracker.getProgressStats()
       const newSessions = progressTracker.getRecentSessions(10)
-      const newHistory = progressTracker.getScoreHistoryBySessions(30)
+      const newHistory = progressTracker.getScoreHistoryByTimeRange(scoreRange)
+      const newPhonemeMastery = progressTracker.getPhonemeMasteryProgress(30)
 
       setStats(newStats)
       setRecentSessions(newSessions)
       setScoreHistory(newHistory)
+      setPhonemeMasteryData(newPhonemeMastery)
+      
+      // Clear loading dots when data is loaded
+      if (dotsRef.current) {
+        clearInterval(dotsRef.current)
+      }
     }
 
     loadData()
@@ -161,8 +186,30 @@ export function ProgressDashboard() {
     }
   }, [])
 
+  // Separate useEffect for scoreRange changes
+  useEffect(() => {
+    const loadData = () => {
+      const newHistory = progressTracker.getScoreHistoryByTimeRange(scoreRange)
+      setScoreHistory(newHistory)
+    }
+    loadData()
+  }, [scoreRange])
+
   if (!stats) {
-    return <div className="flex items-center justify-center h-64">Loading dashboard...</div>
+    return (
+      <div className="flex flex-col items-center justify-center h-64 gap-4">
+        <Image
+          src="/parrot.gif"
+          alt="Loading..."
+          width={192}
+          height={192}
+          className="w-48 h-48 object-contain"
+        />
+        <div className="text-lg font-medium text-gray-600">
+          Loading{loadingDots}
+        </div>
+      </div>
+    )
   }
 
   if (stats.totalSessions === 0) {
@@ -273,8 +320,48 @@ export function ProgressDashboard() {
         <TabsContent value="progress" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Score Progression (Last 30 Sessions)</CardTitle>
-              <CardDescription>Track your pronunciation improvement over your recent practice sessions</CardDescription>
+              <CardTitle>Phoneme Mastery Progress</CardTitle>
+              <CardDescription>Track how your phonemes improve from "Needs Work" to "Improving" to "Mastered" over time!</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {phonemeMasteryData.sessions.length > 0 ? (
+                <div className="h-80">
+                  <PhonemeProgressChart
+                    sessions={phonemeMasteryData.sessions}
+                    mastered={phonemeMasteryData.mastered}
+                    improving={phonemeMasteryData.improving}
+                    needsWork={phonemeMasteryData.needsWork}
+                  />
+                </div>
+              ) : (
+                <div className="h-80 flex items-center justify-center text-muted-foreground">
+                  Complete some practice sessions to see your phoneme mastery progress
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Score Progression</CardTitle>
+                  <CardDescription>Track your pronunciation improvement over time</CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-medium">Time Range:</label>
+                  <select
+                    value={scoreRange}
+                    onChange={(e) => setScoreRange(e.target.value as 'lifetime' | '30days' | '30sessions' | '10sessions')}
+                    className="rounded-md border px-3 py-1 text-sm"
+                  >
+                    <option value="lifetime">Lifetime</option>
+                    <option value="30days">Last 30 Days</option>
+                    <option value="30sessions">Last 30 Sessions</option>
+                    <option value="10sessions">Last 10 Sessions</option>
+                  </select>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="h-80">
@@ -290,9 +377,9 @@ export function ProgressDashboard() {
                     <Line
                       type="monotone"
                       dataKey="score"
-                      stroke="var(--color-primary)"
+                      stroke="#3b82f6"
                       strokeWidth={2}
-                      dot={{ fill: "var(--color-primary)", strokeWidth: 2, r: 4 }}
+                      dot={{ fill: "#3b82f6", strokeWidth: 2, r: 4 }}
                       connectNulls={false}
                     />
                   </LineChart>
