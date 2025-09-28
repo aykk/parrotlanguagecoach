@@ -204,6 +204,7 @@ export function ProgressDashboard() {
           width={192}
           height={192}
           className="w-48 h-48 object-contain"
+          unoptimized
         />
         <div className="text-lg font-medium text-gray-600">
           Loading{loadingDots}

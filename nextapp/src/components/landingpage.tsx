@@ -63,6 +63,7 @@ export const LandingPage = () => {
           width={300}
           height={300}
           className="w-72 h-72 object-contain"
+          unoptimized
         />
         <div className="text-xl font-medium text-gray-600">
           Loading{loadingDots}

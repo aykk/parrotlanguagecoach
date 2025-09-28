@@ -60,6 +60,7 @@ export const AuthHeader = () => {
           width={96}
           height={96}
           className="w-24 h-24 object-contain"
+          unoptimized
         />
         <span className="text-sm text-gray-600">
           Loading{loadingDots}
