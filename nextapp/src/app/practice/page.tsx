@@ -847,10 +847,10 @@ export default function AzureSpeechTest() {
 
   return (
     <main className="min-h-screen relative overflow-hidden">
-      {/* Background with feathers2.png */}
+      {/* Background with parrotparade.jpg */}
       <div className="fixed inset-0 z-0">
         <Image
-          src="/feathers2.png"
+          src="/parrotparade.jpg"
           alt="Background"
           fill
           className="object-cover"

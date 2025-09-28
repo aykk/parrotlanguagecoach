@@ -749,7 +749,11 @@ const LipReader = forwardRef<LipReaderRef>((props, ref) => {
 
   return (
     <div className="border border-white/20 bg-white/70 backdrop-blur-md shadow-lg rounded-2xl p-6">
-      <p className="text-xs text-gray-500 mb-4">Status: {status}</p>
+      {/* Header */}
+      <div className="flex items-center gap-2 mb-4">
+        <Eye className="w-4 h-4 text-gray-700" />
+        <h3 className="text-sm font-medium text-gray-700">Isolated Lip Sync</h3>
+      </div>
 
       {/* Hidden Live Feed (needed for lip tracking) */}
       <div className="hidden">
@@ -768,48 +772,36 @@ const LipReader = forwardRef<LipReaderRef>((props, ref) => {
         />
       </div>
 
-      {/* Isolated Lip Sync */}
-      <div className="mb-4">
-        {/* Isolated mouth outline + audio-synced playback */}
-        <div className="border border-gray-200 rounded-xl p-4">
-          <div className="flex justify-between items-center mb-3">
-            <div className="text-sm font-medium text-gray-700 flex items-center gap-2">
-              <Eye className="w-4 h-4" />
-              Isolated Lip Sync
-            </div>
-          </div>
-
-          <div className="w-full aspect-[4/3] bg-black rounded-lg flex items-center justify-center relative">
-            <canvas ref={isoCanvasRef} width={480} height={360} className="max-w-full scale-x-[-1]" />
-            {/* Hidden video element for playback (contains both video and audio) */}
-            <video 
-              ref={videoPlaybackRef} 
-              src={recordedUrl || undefined} 
-              preload="metadata" 
-              className="hidden"
-              onLoadedData={() => {
-                console.log('Video loaded data, readyState:', videoPlaybackRef.current?.readyState);
-              }}
-              onCanPlay={() => {
-                console.log('Video can play, readyState:', videoPlaybackRef.current?.readyState);
-              }}
-              onError={(e) => {
-                console.log('Video error (may be normal during URL changes):', e);
-              }}
-              onAbort={() => {
-                console.log('Video load aborted (normal when URL changes rapidly)');
-              }}
-              onTimeUpdate={() => {
-                // Video time update for lip sync
-                // No need to sync with separate audio since video contains both
-              }}
-            />
-          </div>
-
-        </div>
+      {/* Isolated Lip Sync Display */}
+      <div className="w-full aspect-[4/3] bg-black rounded-lg flex items-center justify-center relative mb-4">
+        <canvas ref={isoCanvasRef} width={480} height={360} className="max-w-full scale-x-[-1]" />
+        {/* Hidden video element for playback (contains both video and audio) */}
+        <video 
+          ref={videoPlaybackRef} 
+          src={recordedUrl || undefined} 
+          preload="metadata" 
+          className="hidden"
+          onLoadedData={() => {
+            console.log('Video loaded data, readyState:', videoPlaybackRef.current?.readyState);
+          }}
+          onCanPlay={() => {
+            console.log('Video can play, readyState:', videoPlaybackRef.current?.readyState);
+          }}
+          onError={(e) => {
+            console.log('Video error (may be normal during URL changes):', e);
+          }}
+          onAbort={() => {
+            console.log('Video load aborted (normal when URL changes rapidly)');
+          }}
+          onTimeUpdate={() => {
+            // Video time update for lip sync
+            // No need to sync with separate audio since video contains both
+          }}
+        />
       </div>
 
-
+      {/* Status */}
+      <p className="text-xs text-gray-500">Status: {status}</p>
     </div>
   );
 });

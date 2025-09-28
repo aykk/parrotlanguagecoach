@@ -98,10 +98,10 @@ export default function AuthPage() {
 
   return (
     <main className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden">
-      {/* Background with parrotparade.jpg */}
-      <div className="absolute inset-0 z-0">
+      {/* Background with feathers2.png */}
+      <div className="fixed inset-0 z-0">
         <Image
-          src="/parrotparade.jpg"
+          src="/feathers2.png"
           alt="Background"
           fill
           className="object-cover"
