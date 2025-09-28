@@ -40,6 +40,18 @@ export default function AuthPage() {
   const signUp = async () => {
     setMsg(null);
     setLoading(true);
+    
+    if (!email.trim()) {
+      setMsg("Missing email");
+      setLoading(false);
+      return;
+    }
+    if (!password.trim()) {
+      setMsg("Missing password");
+      setLoading(false);
+      return;
+    }
+    
     const { error } = await supabase.auth.signUp({ email, password });
     if (error) setMsg(error.message);
     else setMsg("Check your inbox to confirm, then sign in.");
@@ -49,6 +61,18 @@ export default function AuthPage() {
   const signIn = async () => {
     setMsg(null);
     setLoading(true);
+    
+    if (!email.trim()) {
+      setMsg("Missing email");
+      setLoading(false);
+      return;
+    }
+    if (!password.trim()) {
+      setMsg("Missing password");
+      setLoading(false);
+      return;
+    }
+    
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) setMsg(error.message);
     setLoading(false);
