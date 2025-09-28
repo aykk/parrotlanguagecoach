@@ -25,10 +25,17 @@ export const LandingPage = () => {
       setLoadingDots(".".repeat(dotCount))
     }, 500)
 
-    // Set loaded state after 2 seconds
+    // Check if this is the first visit
+    const isFirstVisit = !sessionStorage.getItem('hasVisited')
+    const loadingDuration = isFirstVisit ? 2000 : 100
+
+    // Set loaded state after appropriate duration
     const timer = setTimeout(() => {
       setIsLoaded(true)
-    }, 2000)
+      if (isFirstVisit) {
+        sessionStorage.setItem('hasVisited', 'true')
+      }
+    }, loadingDuration)
 
     // Start word rotation after 3 seconds to let the first word stay longer
     const rotationTimer = setTimeout(() => {
